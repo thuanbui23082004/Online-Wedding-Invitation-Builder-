@@ -22,7 +22,6 @@ const LayoutIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const SettingsIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07A10 10 0 014.93 4.93"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 15.54A5 5 0 018.46 8.46"/></svg>;
 const ChevronDownIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>;
 const CursorIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z" /></svg>;
-const SparkleIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>;
 
 // ── Collapsible Section ────────────────────────────────────
 interface SectionProps {
@@ -50,9 +49,9 @@ function Section({ title, icon, defaultOpen = true, children }: SectionProps) {
 }
 
 // ── Slider ─────────────────────────────────────────────────
-function Slider({ label, value, min = 0, max = 1, step = 0.01, onChange, displayVal }: {
+function Slider({ label, value, min = 0, max = 1, step = 0.01, onChange, onCommit, displayVal }: {
   label: string; value: number; min?: number; max?: number; step?: number;
-  onChange: (v: number) => void; displayVal?: string;
+  onChange: (v: number) => void; onCommit?: () => void; displayVal?: string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
@@ -66,6 +65,8 @@ function Slider({ label, value, min = 0, max = 1, step = 0.01, onChange, display
           value={value}
           style={{ '--pct': `${pct}%` } as React.CSSProperties}
           onChange={(e) => onChange(Number(e.target.value))}
+          onMouseUp={onCommit}
+          onTouchEnd={onCommit}
         />
         <span className="rp-slider-val">{displayVal ?? value.toFixed(2)}</span>
       </div>
@@ -74,14 +75,19 @@ function Slider({ label, value, min = 0, max = 1, step = 0.01, onChange, display
 }
 
 // ── Color Swatch ───────────────────────────────────────────
-function ColorField({ label, color, onChange }: { label: string; color: string; onChange: (c: string) => void }) {
+function ColorField({ label, color, onChange, onCommit }: { label: string; color: string; onChange: (c: string) => void; onCommit?: () => void }) {
   const isTransparent = color === 'transparent';
   return (
     <div className="rp-color-field">
       <span className="rp-color-label">{label}</span>
       <div className="rp-color-swatch-wrap">
         <div className={`rp-color-swatch ${isTransparent ? 'rp-color-transparent' : ''}`} style={!isTransparent ? { background: color } : {}}>
-          <input type="color" value={isTransparent ? '#ffffff' : color} onChange={(e) => onChange(e.target.value)} />
+          <input 
+            type="color" 
+            value={isTransparent ? '#ffffff' : color} 
+            onChange={(e) => onChange(e.target.value)} 
+            onBlur={onCommit}
+          />
         </div>
         <span className="rp-color-hex">{isTransparent ? 'Trong suốt' : color.toUpperCase()}</span>
       </div>
@@ -90,10 +96,10 @@ function ColorField({ label, color, onChange }: { label: string; color: string; 
 }
 
 // ── Stepper ────────────────────────────────────────────────
-function Stepper({ value, onChange, min = 1, max = 200 }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
+function Stepper({ value, onChange, onCommit, min = 1, max = 200 }: { value: number; onChange: (v: number) => void; onCommit?: () => void; min?: number; max?: number }) {
   return (
     <div className="rp-stepper">
-      <button className="rp-stepper-btn" onClick={() => onChange(Math.max(min, value - 1))}>−</button>
+      <button className="rp-stepper-btn" onClick={() => { onChange(Math.max(min, value - 1)); onCommit?.(); }}>−</button>
       <input
         type="number"
         className="rp-stepper-input"
@@ -101,8 +107,9 @@ function Stepper({ value, onChange, min = 1, max = 200 }: { value: number; onCha
         min={min}
         max={max}
         onChange={(e) => onChange(Number(e.target.value))}
+        onBlur={onCommit}
       />
-      <button className="rp-stepper-btn" onClick={() => onChange(Math.min(max, value + 1))}>+</button>
+      <button className="rp-stepper-btn" onClick={() => { onChange(Math.min(max, value + 1)); onCommit?.(); }}>+</button>
     </div>
   );
 }
@@ -115,9 +122,13 @@ const FONTS = [
 ];
 
 function TextPanel({ id, props }: { id: string; props: TextProperties }) {
-  const { updateTextProp } = useEditorStore();
-  const upd = <K extends keyof TextProperties>(key: K, val: TextProperties[K]) =>
+  const { updateTextProp, pushHistory } = useEditorStore();
+  const upd = <K extends keyof TextProperties>(key: K, val: TextProperties[K], shouldPushHistory = true) => {
     updateTextProp(id, key, val);
+    if (shouldPushHistory) {
+      pushHistory();
+    }
+  };
 
   const toggleBold = () => upd('fontWeight', props.fontWeight === 'bold' ? 'normal' : 'bold');
   const toggleItalic = () => upd('fontStyle', props.fontStyle === 'italic' ? 'normal' : 'italic');
@@ -177,7 +188,7 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
         {/* Size */}
         <div className="rp-field">
           <span className="rp-label">Cỡ chữ</span>
-          <Stepper value={props.fontSize} onChange={(v) => upd('fontSize', v)} min={6} max={200} />
+          <Stepper value={props.fontSize} onChange={(v) => upd('fontSize', v, false)} onCommit={pushHistory} min={6} max={200} />
         </div>
 
         {/* Letter spacing */}
@@ -187,7 +198,8 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
           min={-5}
           max={20}
           step={0.5}
-          onChange={(v) => upd('letterSpacing', v)}
+          onChange={(v) => upd('letterSpacing', v, false)}
+          onCommit={pushHistory}
           displayVal={`${props.letterSpacing}px`}
         />
         {/* Line height */}
@@ -197,22 +209,24 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
           min={0.8}
           max={3}
           step={0.05}
-          onChange={(v) => upd('lineHeight', v)}
+          onChange={(v) => upd('lineHeight', v, false)}
+          onCommit={pushHistory}
           displayVal={props.lineHeight.toFixed(2)}
         />
       </Section>
 
       {/* Color */}
       <Section title="Màu sắc" icon={<PaletteIcon />} defaultOpen>
-        <ColorField label="Màu chữ" color={props.color} onChange={(c) => upd('color', c)} />
-        <ColorField label="Màu nền" color={props.backgroundColor} onChange={(c) => upd('backgroundColor', c)} />
+        <ColorField label="Màu chữ" color={props.color} onChange={(c) => upd('color', c, false)} onCommit={pushHistory} />
+        <ColorField label="Màu nền" color={props.backgroundColor} onChange={(c) => upd('backgroundColor', c, false)} onCommit={pushHistory} />
         <Slider
           label="Độ mờ"
           value={props.opacity}
           min={0}
           max={1}
           step={0.01}
-          onChange={(v) => upd('opacity', v)}
+          onChange={(v) => upd('opacity', v, false)}
+          onCommit={pushHistory}
           displayVal={props.opacity.toFixed(2)}
         />
       </Section>
@@ -222,19 +236,19 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
         <div className="rp-grid-2">
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Trên</span>
-            <input type="number" className="rp-grid-input" value={props.paddingTop} onChange={(e) => upd('paddingTop', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.paddingTop} onChange={(e) => upd('paddingTop', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Phải</span>
-            <input type="number" className="rp-grid-input" value={props.paddingRight} onChange={(e) => upd('paddingRight', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.paddingRight} onChange={(e) => upd('paddingRight', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Dưới</span>
-            <input type="number" className="rp-grid-input" value={props.paddingBottom} onChange={(e) => upd('paddingBottom', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.paddingBottom} onChange={(e) => upd('paddingBottom', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Trái</span>
-            <input type="number" className="rp-grid-input" value={props.paddingLeft} onChange={(e) => upd('paddingLeft', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.paddingLeft} onChange={(e) => upd('paddingLeft', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
         </div>
       </Section>
@@ -243,12 +257,12 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
       <Section title="Đường viền" icon={<SettingsIcon />} defaultOpen={false}>
         <div className="rp-field">
           <span className="rp-label">Độ dày</span>
-          <Stepper value={props.borderWidth} onChange={(v) => upd('borderWidth', v)} min={0} max={20} />
+          <Stepper value={props.borderWidth} onChange={(v) => upd('borderWidth', v, false)} onCommit={pushHistory} min={0} max={20} />
         </div>
-        <ColorField label="Màu viền" color={props.borderColor} onChange={(c) => upd('borderColor', c)} />
+        <ColorField label="Màu viền" color={props.borderColor} onChange={(c) => upd('borderColor', c, false)} onCommit={pushHistory} />
         <div className="rp-field">
           <span className="rp-label">Bo tròn</span>
-          <Stepper value={props.borderRadius} onChange={(v) => upd('borderRadius', v)} min={0} max={100} />
+          <Stepper value={props.borderRadius} onChange={(v) => upd('borderRadius', v, false)} onCommit={pushHistory} min={0} max={100} />
         </div>
       </Section>
 
@@ -256,18 +270,18 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
         <div className="rp-grid-2">
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">X</span>
-            <input type="number" className="rp-grid-input" value={props.shadowX} onChange={(e) => upd('shadowX', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.shadowX} onChange={(e) => upd('shadowX', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Y</span>
-            <input type="number" className="rp-grid-input" value={props.shadowY} onChange={(e) => upd('shadowY', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.shadowY} onChange={(e) => upd('shadowY', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
           <div className="rp-grid-input-wrap">
             <span className="rp-grid-input-label">Mờ</span>
-            <input type="number" className="rp-grid-input" value={props.shadowBlur} onChange={(e) => upd('shadowBlur', Number(e.target.value))} />
+            <input type="number" className="rp-grid-input" value={props.shadowBlur} onChange={(e) => upd('shadowBlur', Number(e.target.value), false)} onBlur={pushHistory} />
           </div>
         </div>
-        <ColorField label="Màu bóng" color={props.shadowColor} onChange={(c) => upd('shadowColor', c)} />
+        <ColorField label="Màu bóng" color={props.shadowColor} onChange={(c) => upd('shadowColor', c, false)} onCommit={pushHistory} />
       </Section>
 
       <Section title="Nâng cao" icon={<SettingsIcon />} defaultOpen={false}>
@@ -277,7 +291,8 @@ function TextPanel({ id, props }: { id: string; props: TextProperties }) {
             type="text"
             className="rp-input"
             value={props.content}
-            onChange={(e) => upd('content', e.target.value)}
+            onChange={(e) => upd('content', e.target.value, false)}
+            onBlur={pushHistory}
           />
         </div>
       </Section>

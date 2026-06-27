@@ -2,7 +2,7 @@
 // MAIN CANVAS COMPONENT
 // ============================================================
 
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import '../styles/Canvas.css';
 import { useEditorStore } from '../store/editorStore';
 import type { CanvasElement } from '../types/editor.types';
@@ -62,12 +62,11 @@ const FitIcon = () => (
 // ── Draggable Element ──────────────────────────────────────
 interface DraggableElementProps {
   element: CanvasElement;
-  canvasRef: React.RefObject<HTMLDivElement>;
   zoom: number;
 }
 
-function DraggableElement({ element, canvasRef, zoom }: DraggableElementProps) {
-  const { selectElement, deleteElement, duplicateElement, updateElementPosition, selectedElement } =
+function DraggableElement({ element, zoom }: DraggableElementProps) {
+  const { selectElement, deleteElement, duplicateElement, updateElementPosition, selectedElement, pushHistory } =
     useEditorStore();
   const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, origX: 0, origY: 0 });
   const isSelected = selectedElement?.id === element.id;
@@ -94,18 +93,20 @@ function DraggableElement({ element, canvasRef, zoom }: DraggableElementProps) {
         updateElementPosition(element.id, dragRef.current.origX + dx, dragRef.current.origY + dy);
       };
       const handleMouseUp = () => {
-        dragRef.current.isDragging = false;
+        if (dragRef.current.isDragging) {
+          dragRef.current.isDragging = false;
+          pushHistory();
+        }
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       };
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     },
-    [element.id, element.x, element.y, zoom, selectElement, updateElementPosition]
+    [element.id, element.x, element.y, zoom, selectElement, updateElementPosition, pushHistory]
   );
 
   const textProps = element.textProps;
-  const scale = zoom / 100;
 
   const style: React.CSSProperties = {
     left: element.x,
@@ -208,20 +209,40 @@ export function MainCanvas() {
     canvasWidth,
     canvasHeight,
     selectElement,
+    undo,
+    redo,
   } = useEditorStore();
   const canvasRef = useRef<HTMLDivElement>(null!);
 
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
       if (e.key === 'Escape') selectElement(null);
       if (e.ctrlKey && e.key === '=') { e.preventDefault(); setZoom(zoom + 10); }
       if (e.ctrlKey && e.key === '-') { e.preventDefault(); setZoom(zoom - 10); }
       if (e.ctrlKey && e.key === '0') { e.preventDefault(); setZoom(100); }
+
+      // Ctrl + Z (Undo)
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        undo();
+      }
+
+      // Ctrl + Y or Ctrl + Shift + Z (Redo)
+      if (e.ctrlKey && (e.key === 'y' || e.key === 'Y' || (e.shiftKey && (e.key === 'z' || e.key === 'Z')))) {
+        e.preventDefault();
+        redo();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [zoom, setZoom, selectElement]);
+  }, [zoom, setZoom, selectElement, undo, redo]);
 
   const scale = zoom / 100;
 
@@ -268,7 +289,7 @@ export function MainCanvas() {
 
           {/* Elements */}
           {elements.map((el) => (
-            <DraggableElement key={el.id} element={el} canvasRef={canvasRef} zoom={zoom} />
+            <DraggableElement key={el.id} element={el} zoom={zoom} />
           ))}
 
           {/* Empty hint */}

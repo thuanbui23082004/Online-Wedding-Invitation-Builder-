@@ -5,6 +5,7 @@
 import '../styles/LeftToolbar.css';
 import { useEditorStore } from '../store/editorStore';
 import type { ToolType } from '../types/editor.types';
+import type { JSX } from 'react';
 
 // ── SVG Icons ─────────────────────────────────────────────
 const TextIcon = () => (
