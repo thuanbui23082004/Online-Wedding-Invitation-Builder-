@@ -372,3 +372,62 @@
   height: 11px;
 }
 
+
+/* -- Shape Popup ------------------------------------------ */
+.lt-shape-popup {
+  position: absolute;
+  left: calc(var(--ed-toolbar-w) + 8px);
+  top: 150px;
+  width: 220px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid var(--ed-border);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.lt-shape-header {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ed-text-secondary);
+  border-bottom: 1px solid var(--ed-border);
+  letter-spacing: 0.5px;
+}
+
+.lt-shape-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.lt-shape-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--ed-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.lt-shape-item:hover {
+  background: var(--ed-bg-hover);
+}
+
+.lt-shape-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ed-text-secondary);
+}
+
+.lt-shape-item:hover .lt-shape-icon {
+  color: var(--ed-accent);
+}

@@ -9,6 +9,8 @@ import type {
   CanvasElement,
   TextProperties,
   ImageProperties,
+  ShapeType,
+  ShapeProperties,
   UploadedImage,
   MusicProperties,
   ImageCropData,
@@ -64,6 +66,30 @@ const DEFAULT_IMAGE_PROPS: ImageProperties = {
   objectFit: 'cover',
 };
 
+const DEFAULT_SHAPE_PROPS: ShapeProperties = {
+  shapeType: 'rectangle',
+  fillType: 'solid',
+  fillColor: '#1a1a2e',
+  gradientFrom: '#1a1a2e',
+  gradientTo: '#4f46e5',
+  gradientAngle: 90,
+  opacity: 1,
+  borderStyle: 'solid',
+  borderPosition: 'center',
+  borderColor: '#000000',
+  borderWidth: 0,
+  borderRadiusTopLeft: 0,
+  borderRadiusTopRight: 0,
+  borderRadiusBottomLeft: 0,
+  borderRadiusBottomRight: 0,
+  borderRadiusLinked: true,
+  shadowEnabled: false,
+  shadowX: 0,
+  shadowY: 4,
+  shadowBlur: 10,
+  shadowColor: 'rgba(0, 0, 0, 0.2)',
+};
+
 // ── Initial data ──────────────────────────────────────────
 const INITIAL_ELEMENTS: CanvasElement[] = [
   {
@@ -100,6 +126,16 @@ interface EditorActions {
     key: K,
     value: ImageProperties[K]
   ) => void;
+  addShapeElement: (shapeType: ShapeType) => void;
+  updateShapeProp: <K extends keyof ShapeProperties>(
+    id: string,
+    key: K,
+    value: ShapeProperties[K]
+  ) => void;
+  updateShapeProps: (
+    id: string,
+    props: Partial<ShapeProperties>
+  ) => void;
   updateElementPosition: (id: string, x: number, y: number) => void;
   updateElementSize: (id: string, width: number, height: number) => void;
   updateElementRotation: (id: string, rotation: number) => void;
@@ -125,7 +161,17 @@ interface EditorActions {
 }
 
 
-// ── Initial state ─────────────────────────────────────────
+// ── Initial data ──────────────────────────────────────────
+const INITIAL_BACKGROUND: BackgroundProperties = {
+  type: 'solid',
+  color: '#ffffff',
+  gradientFrom: '#ffffff',
+  gradientTo: '#000000',
+  gradientAngle: 90,
+  imageSrc: '',
+  imageOpacity: 1,
+};
+
 const INITIAL_STATE: EditorState = {
   activeTool: 'text',
   selectedElement: INITIAL_ELEMENTS[0],
@@ -154,18 +200,10 @@ const INITIAL_STATE: EditorState = {
   ],
   activeRightTab: 'settings',
   showAIColorPanel: true,
-  history: [INITIAL_ELEMENTS],
+  history: [{ elements: INITIAL_ELEMENTS, canvasBackground: INITIAL_BACKGROUND }],
   historyIndex: 0,
   music: null,
-  canvasBackground: {
-    type: 'solid',
-    color: '#ffffff',
-    gradientFrom: '#ffffff',
-    gradientTo: '#000000',
-    gradientAngle: 90,
-    imageSrc: '',
-    imageOpacity: 1,
-  },
+  canvasBackground: INITIAL_BACKGROUND,
   recentColors: [],
 };
 
@@ -234,6 +272,49 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     get().pushHistory();
   },
 
+  // ── Add shape element ─────────────────────────────────
+  addShapeElement: (shapeType) => {
+    const { elements } = get();
+    const id = `el-shape-${Date.now()}`;
+    const x = 50 + Math.random() * 80;
+    const y = 50 + Math.random() * 80;
+    
+    let width = 150;
+    let height = 150;
+    
+    if (shapeType === 'line') {
+      width = 200;
+      height = 4;
+    } else if (shapeType === 'rectangle') {
+      width = 200;
+      height = 120;
+    } else if (shapeType === 'triangle') {
+      width = 150;
+      height = 130;
+    }
+
+    const newEl: CanvasElement = {
+      id,
+      type: 'shape',
+      x,
+      y,
+      width,
+      height,
+      zIndex: elements.length + 1,
+      rotation: 0,
+      isSelected: true,
+      shapeProps: { ...DEFAULT_SHAPE_PROPS, shapeType },
+    };
+    const updated = elements.map((el) => ({ ...el, isSelected: false }));
+    set({
+      elements: [...updated, newEl],
+      selectedElement: newEl,
+      activeTool: 'tools',
+    });
+    get().pushHistory();
+  },
+
+
 
   // ── Update text prop ──────────────────────────────────
   updateTextProp: (id, key, value) => {
@@ -255,6 +336,33 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     const updated = elements.map((el) => {
       if (el.id !== id || !el.imageProps) return el;
       return { ...el, imageProps: { ...el.imageProps, [key]: value } };
+    });
+    const updatedSelected =
+      selectedElement?.id === id
+        ? updated.find((el) => el.id === id) ?? null
+        : selectedElement;
+    set({ elements: updated, selectedElement: updatedSelected });
+  },
+
+  // ── Update shape prop ─────────────────────────────────
+  updateShapeProp: (id, key, value) => {
+    const { elements, selectedElement } = get();
+    const updated = elements.map((el) => {
+      if (el.id !== id || !el.shapeProps) return el;
+      return { ...el, shapeProps: { ...el.shapeProps, [key]: value } };
+    });
+    const updatedSelected =
+      selectedElement?.id === id
+        ? updated.find((el) => el.id === id) ?? null
+        : selectedElement;
+    set({ elements: updated, selectedElement: updatedSelected });
+  },
+
+  updateShapeProps: (id, props) => {
+    const { elements, selectedElement } = get();
+    const updated = elements.map((el) => {
+      if (el.id !== id || !el.shapeProps) return el;
+      return { ...el, shapeProps: { ...el.shapeProps, ...props } };
     });
     const updatedSelected =
       selectedElement?.id === id
@@ -446,9 +554,12 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
   // ── History ───────────────────────────────────────────
 
   pushHistory: () => {
-    const { elements, history, historyIndex } = get();
+    const { elements, canvasBackground, history, historyIndex } = get();
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.parse(JSON.stringify(elements)));
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(elements)),
+      canvasBackground: JSON.parse(JSON.stringify(canvasBackground)),
+    });
     set({ history: newHistory, historyIndex: newHistory.length - 1 });
   },
 
@@ -456,15 +567,25 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     const { history, historyIndex } = get();
     if (historyIndex <= 0) return;
     const newIndex = historyIndex - 1;
-    const elements = JSON.parse(JSON.stringify(history[newIndex]));
-    set({ elements, historyIndex: newIndex, selectedElement: null });
+    const state = JSON.parse(JSON.stringify(history[newIndex]));
+    set({ 
+      elements: state.elements, 
+      canvasBackground: state.canvasBackground,
+      historyIndex: newIndex, 
+      selectedElement: null 
+    });
   },
 
   redo: () => {
     const { history, historyIndex } = get();
     if (historyIndex >= history.length - 1) return;
     const newIndex = historyIndex + 1;
-    const elements = JSON.parse(JSON.stringify(history[newIndex]));
-    set({ elements, historyIndex: newIndex, selectedElement: null });
+    const state = JSON.parse(JSON.stringify(history[newIndex]));
+    set({ 
+      elements: state.elements, 
+      canvasBackground: state.canvasBackground,
+      historyIndex: newIndex, 
+      selectedElement: null 
+    });
   },
 }));

@@ -12,6 +12,7 @@ import { useEditorStore } from '../store/editorStore';
 import { CursorIcon } from './RightPanels/RightPanelShared';
 import { TextRightPanel } from './RightPanels/TextRightPanel';
 import { ImageRightPanel } from './RightPanels/ImageRightPanel';
+import { ShapeRightPanel } from './RightPanels/ShapeRightPanel';
 
 
 // ── Effects tab ────────────────────────────────────────────
@@ -76,6 +77,15 @@ export function RightPanel() {
 
   const renderSettingsContent = () => {
     // ── Image element selected → ImageRightPanel ──────────
+    if (selectedElement?.type === 'text' && selectedElement.textProps) {
+      return (
+        <>
+          <div className="right-panel-hint">Nhấp vào văn bản để chỉnh sửa nội dung</div>
+          <TextRightPanel id={selectedElement.id} props={selectedElement.textProps} />
+        </>
+      );
+    }
+
     if (selectedElement?.type === 'image' && selectedElement.imageProps) {
       return (
         <ImageRightPanel
@@ -87,14 +97,8 @@ export function RightPanel() {
       );
     }
 
-    // ── Text element selected → TextRightPanel ────────────
-    if (selectedElement?.type === 'text' && selectedElement.textProps) {
-      return (
-        <>
-          <div className="right-panel-hint">Nhấp vào văn bản để chỉnh sửa nội dung</div>
-          <TextRightPanel id={selectedElement.id} props={selectedElement.textProps} />
-        </>
-      );
+    if (selectedElement?.type === 'shape') {
+      return <ShapeRightPanel element={selectedElement} activeTab={activeRightTab} />;
     }
 
     // ── Nothing selected: show tool-specific guidance ─────

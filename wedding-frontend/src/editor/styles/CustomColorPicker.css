@@ -1,6 +1,6 @@
 .custom-color-picker-wrapper {
   position: absolute;
-  top: 0;
+  top: 130px;
   left: 100%;
   margin-left: 10px;
   background: white;
@@ -158,4 +158,20 @@
 
 .ccp-recent-item:hover {
   transform: scale(1.1);
+}
+
+.ccp-align-right {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.ccp-align-right.custom-color-picker-wrapper {
+  position: fixed;
+  right: calc(var(--ed-right-panel-w, 320px) + 10px);
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
 }

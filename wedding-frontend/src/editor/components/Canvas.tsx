@@ -8,6 +8,7 @@ import { useEditorStore } from '../store/editorStore';
 import type { CanvasElement } from '../types/editor.types';
 import { TextEditorElement } from './TextEditorElement';
 import { ImageEditorElement } from './ImageEditorElement';
+import { ShapeEditorElement } from './ShapeEditorElement';
 
 // ── SVG Icons ─────────────────────────────────────────────
 const GridIcon = () => (
@@ -278,6 +279,9 @@ function DraggableElement({ element, zoom }: DraggableElementProps) {
       )}
       {element.type === 'image' && (
         <ImageEditorElement element={element} zoom={zoom} />
+      )}
+      {element.type === 'shape' && (
+        <ShapeEditorElement element={element} zoom={zoom} />
       )}
 
       {/* Controls – visible only when selected */}

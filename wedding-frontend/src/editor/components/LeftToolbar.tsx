@@ -232,8 +232,9 @@ const TOOLS: ToolConfig[] = [
 
 // ── Left Toolbar ───────────────────────────────────────────
 export function LeftToolbar() {
-  const { activeTool, setActiveTool, addTextElement } = useEditorStore();
+  const { activeTool, setActiveTool, addTextElement, addShapeElement } = useEditorStore();
   const [showImagePanel, setShowImagePanel] = useState(false);
+  const [showShapePopup, setShowShapePopup] = useState(false);
 
   const handleToolClick = (tool: ToolType) => {
     if (tool === 'image') {
@@ -243,8 +244,16 @@ export function LeftToolbar() {
       setShowImagePanel(next);
       return;
     }
-    // Close image panel when switching to another tool
+    if (tool === 'tools') {
+      const next = activeTool === 'tools' ? !showShapePopup : true;
+      setActiveTool('tools');
+      setShowShapePopup(next);
+      setShowImagePanel(false);
+      return;
+    }
+    // Close panels when switching to another tool
     setShowImagePanel(false);
+    setShowShapePopup(false);
     setActiveTool(tool);
     if (tool === 'text') {
       addTextElement();
@@ -292,6 +301,35 @@ export function LeftToolbar() {
       {/* Background slide-out panel */}
       {activeTool === 'background' && (
         <BackgroundPanel onClose={() => setActiveTool('text')} />
+      )}
+
+      {/* Shape Popup */}
+      {showShapePopup && (
+        <div className="lt-shape-popup">
+          <div className="lt-shape-header">HÌNH DẠNG</div>
+          <div className="lt-shape-list">
+            <button className="lt-shape-item" onClick={() => { addShapeElement('line'); setShowShapePopup(false); }}>
+              <div className="lt-shape-icon"><svg viewBox="0 0 24 24"><line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="2"/></svg></div>
+              <span>Đường kẻ</span>
+            </button>
+            <button className="lt-shape-item" onClick={() => { addShapeElement('square'); setShowShapePopup(false); }}>
+              <div className="lt-shape-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="currentColor"/></svg></div>
+              <span>Hình vuông</span>
+            </button>
+            <button className="lt-shape-item" onClick={() => { addShapeElement('rectangle'); setShowShapePopup(false); }}>
+              <div className="lt-shape-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" fill="currentColor"/></svg></div>
+              <span>Hình chữ nhật</span>
+            </button>
+            <button className="lt-shape-item" onClick={() => { addShapeElement('circle'); setShowShapePopup(false); }}>
+              <div className="lt-shape-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg></div>
+              <span>Hình tròn</span>
+            </button>
+            <button className="lt-shape-item" onClick={() => { addShapeElement('triangle'); setShowShapePopup(false); }}>
+              <div className="lt-shape-icon"><svg viewBox="0 0 24 24"><polygon points="12,4 20,18 4,18" fill="currentColor"/></svg></div>
+              <span>Tam giác</span>
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

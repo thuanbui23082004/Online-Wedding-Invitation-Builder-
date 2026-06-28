@@ -90,6 +90,36 @@ export interface ImageProperties {
   objectFit: 'contain' | 'cover' | 'fill';
 }
 
+// ── Shape Properties ──────────────────────────────────────
+export type ShapeType = 'line' | 'square' | 'rectangle' | 'circle' | 'triangle';
+
+export interface ShapeProperties {
+  shapeType: ShapeType;
+  fillType: 'solid' | 'gradient';
+  fillColor: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientAngle?: number;
+  opacity: number;
+  // Border
+  borderStyle: BorderStyleType;
+  borderPosition: 'inside' | 'center' | 'outside';
+  borderColor: string;
+  borderWidth: number;
+  // Border Radius
+  borderRadiusTopLeft: number;
+  borderRadiusTopRight: number;
+  borderRadiusBottomLeft: number;
+  borderRadiusBottomRight: number;
+  borderRadiusLinked: boolean;
+  // Shadow
+  shadowEnabled: boolean;
+  shadowX: number;
+  shadowY: number;
+  shadowBlur: number;
+  shadowColor: string;
+}
+
 // ── Background Properties ─────────────────────────────────
 export interface BackgroundProperties {
   type: 'solid' | 'gradient' | 'image';
@@ -126,6 +156,7 @@ export interface CanvasElement {
   isSelected?: boolean;
   textProps?: TextProperties;
   imageProps?: ImageProperties;
+  shapeProps?: ShapeProperties;
 }
 
 // ── Uploaded Image Record ─────────────────────────────────
@@ -151,6 +182,11 @@ export interface AIColor {
   label: string;
 }
 
+export interface HistoryState {
+  elements: CanvasElement[];
+  canvasBackground: BackgroundProperties;
+}
+
 // ── Editor State ──────────────────────────────────────────
 export interface EditorState {
   activeTool: ToolType;
@@ -166,7 +202,7 @@ export interface EditorState {
   aiColors: AIColor[];
   activeRightTab: 'settings' | 'effects';
   showAIColorPanel: boolean;
-  history: CanvasElement[][];
+  history: HistoryState[];
   historyIndex: number;
   music: MusicProperties | null;
   canvasBackground: BackgroundProperties;

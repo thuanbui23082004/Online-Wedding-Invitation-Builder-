@@ -134,13 +134,12 @@ export function BackgroundPanel({ onClose }: BackgroundPanelProps) {
                 <p>Chọn màu nền</p>
               </div>
               <div style={{ position: 'relative' }}>
-                <button 
+                <button
                   className="bgp-custom-color-btn"
                   onClick={() => setShowColorPicker(!showColorPicker)}
                 >
                   <div className="color-wheel-icon"></div>
                 </button>
-                {showColorPicker && <CustomColorPicker onClose={() => setShowColorPicker(false)} />}
               </div>
             </div>
 
@@ -179,10 +178,10 @@ export function BackgroundPanel({ onClose }: BackgroundPanelProps) {
             <button className="bgp-upload-btn" onClick={() => fileInputRef.current?.click()}>
               Chọn ảnh của tôi
             </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
               accept="image/*"
               onChange={handleFileChange}
             />
@@ -203,6 +202,26 @@ export function BackgroundPanel({ onClose }: BackgroundPanelProps) {
           </div>
         )}
       </div>
+
+      {showColorPicker && (
+        <CustomColorPicker 
+          onClose={() => setShowColorPicker(false)} 
+          initialType={canvasBackground.type}
+          initialColor={canvasBackground.color}
+          initialGradientFrom={canvasBackground.gradientFrom}
+          initialGradientTo={canvasBackground.gradientTo}
+          initialGradientAngle={canvasBackground.gradientAngle}
+          onChange={(data) => {
+            updateCanvasBackground({
+              type: data.type === 'solid' || data.type === 'gradient' || data.type === 'image' ? data.type : 'solid',
+              color: data.color || canvasBackground.color,
+              gradientFrom: data.gradientFrom || canvasBackground.gradientFrom,
+              gradientTo: data.gradientTo || canvasBackground.gradientTo,
+              gradientAngle: data.gradientAngle ?? canvasBackground.gradientAngle
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

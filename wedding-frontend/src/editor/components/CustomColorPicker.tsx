@@ -3,8 +3,24 @@ import { HexColorPicker } from 'react-colorful';
 import { useEditorStore } from '../store/editorStore';
 import '../styles/CustomColorPicker.css';
 
+export interface ColorData {
+  type: 'solid' | 'gradient';
+  color: string;
+  gradientFrom: string;
+  gradientTo: string;
+  gradientAngle: number;
+}
+
 interface CustomColorPickerProps {
   onClose: () => void;
+  initialType?: 'solid' | 'gradient' | 'image';
+  initialColor?: string;
+  initialGradientFrom?: string;
+  initialGradientTo?: string;
+  initialGradientAngle?: number;
+  forceSolid?: boolean;
+  onChange?: (data: ColorData) => void;
+  alignRight?: boolean;
 }
 
 // Helper to convert hex to rgba
@@ -22,51 +38,49 @@ function hexToRgba(hex: string, opacity: number) {
   return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
 }
 
-export function CustomColorPicker({ onClose }: CustomColorPickerProps) {
-  const { canvasBackground, updateCanvasBackground, recentColors, addRecentColor } = useEditorStore();
-  const [tab, setTab] = useState<'solid' | 'gradient'>(canvasBackground.type === 'gradient' ? 'gradient' : 'solid');
+export function CustomColorPicker({ 
+  onClose, 
+  initialType = 'solid', 
+  initialColor = '#ffffff', 
+  initialGradientFrom = '#ffffff',
+  initialGradientTo = '#000000',
+  initialGradientAngle = 90,
+  forceSolid, 
+  onChange, 
+  alignRight 
+}: CustomColorPickerProps) {
+  const { recentColors, addRecentColor } = useEditorStore();
+  const [tab, setTab] = useState<'solid' | 'gradient' | 'image'>(forceSolid ? 'solid' : initialType);
   
   // States for Solid
-  const [solidHex, setSolidHex] = useState('#ffffff');
+  const [solidHex, setSolidHex] = useState(initialColor.startsWith('#') ? initialColor.slice(0, 7) : '#ffffff');
   const [solidOpacity, setSolidOpacity] = useState(100);
 
   // States for Gradient
   const [gradStop, setGradStop] = useState<'from' | 'to'>('from');
-  const [gradFromHex, setGradFromHex] = useState('#ffffff');
-  const [gradToHex, setGradToHex] = useState('#000000');
-  const [gradAngle, setGradAngle] = useState(90);
+  const [gradFromHex, setGradFromHex] = useState(initialGradientFrom);
+  const [gradToHex, setGradToHex] = useState(initialGradientTo);
+  const [gradAngle, setGradAngle] = useState(initialGradientAngle);
 
-  // Initialize from store
+  // Whenever local states change, emit onChange
   useEffect(() => {
-    if (canvasBackground.type === 'solid') {
-      const col = canvasBackground.color || '#ffffff';
-      if (col.startsWith('#')) {
-        setSolidHex(col.slice(0, 7));
-      }
-    } else if (canvasBackground.type === 'gradient') {
-      setGradFromHex(canvasBackground.gradientFrom || '#ffffff');
-      setGradToHex(canvasBackground.gradientTo || '#000000');
-      setGradAngle(canvasBackground.gradientAngle || 90);
-    }
-  }, [canvasBackground]);
-
-  // Update store in real-time
-  useEffect(() => {
-    if (tab === 'solid') {
-      const newColor = hexToRgba(solidHex, solidOpacity);
-      updateCanvasBackground({ type: 'solid', color: newColor });
-    } else {
-      updateCanvasBackground({
-        type: 'gradient',
+    if (onChange) {
+      onChange({
+        type: tab === 'image' ? 'solid' : tab, // fallback
+        color: hexToRgba(solidHex, solidOpacity),
         gradientFrom: gradFromHex,
         gradientTo: gradToHex,
-        gradientAngle: gradAngle
+        gradientAngle: gradAngle,
       });
     }
   }, [solidHex, solidOpacity, gradFromHex, gradToHex, gradAngle, tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSolidChange = (newHex: string) => {
     setSolidHex(newHex);
+  };
+
+  const handleOpacityChange = (newOpacity: number) => {
+    setSolidOpacity(newOpacity);
   };
 
   const handleGradientChange = (newHex: string) => {
@@ -85,12 +99,15 @@ export function CustomColorPicker({ onClose }: CustomColorPickerProps) {
   };
 
   return (
-    <div className="custom-color-picker-wrapper">
+    <div className={`custom-color-picker-wrapper ${alignRight ? 'ccp-align-right' : ''}`}>
       <div className="ccp-header">
+        {!forceSolid && (
         <div className="ccp-tabs">
-          <button className={`ccp-tab ${tab === 'solid' ? 'active' : ''}`} onClick={() => setTab('solid')}>Màu đồng nhất</button>
-          <button className={`ccp-tab ${tab === 'gradient' ? 'active' : ''}`} onClick={() => setTab('gradient')}>Màu gradient</button>
+          <button className={`ccp-tab ${tab === 'solid' ? 'active' : ''}`} onClick={() => setTab('solid')}>Màu</button>
+          <button className={`ccp-tab ${tab === 'gradient' ? 'active' : ''}`} onClick={() => setTab('gradient')}>Gradient</button>
+          <button className={`ccp-tab ${tab === 'image' ? 'active' : ''}`} onClick={() => setTab('image')}>Ảnh</button>
         </div>
+        )}
         <button className="ccp-close" onClick={handleClose}>&times;</button>
       </div>
 
@@ -105,7 +122,7 @@ export function CustomColorPicker({ onClose }: CustomColorPickerProps) {
               </div>
               <div className="ccp-input-group">
                 <label>Độ trong suốt (%)</label>
-                <input type="number" min="0" max="100" value={solidOpacity} onChange={(e) => setSolidOpacity(Number(e.target.value))} />
+                <input type="number" min="0" max="100" value={solidOpacity} onChange={(e) => handleOpacityChange(Number(e.target.value))} />
               </div>
             </div>
           </div>
@@ -160,7 +177,14 @@ export function CustomColorPicker({ onClose }: CustomColorPickerProps) {
                 key={i} 
                 className="ccp-recent-item" 
                 style={{ backgroundColor: c }}
-                onClick={() => updateCanvasBackground({ type: 'solid', color: c })}
+                onClick={() => {
+                  if (tab === 'solid') {
+                    setSolidHex(c.slice(0, 7));
+                  } else {
+                    if (gradStop === 'from') setGradFromHex(c.slice(0, 7));
+                    else setGradToHex(c.slice(0, 7));
+                  }
+                }}
               />
             ))}
           </div>

@@ -1,1 +1,24 @@
- Kịch bản TỆ: Dùng useState cho cả Tọa độ chuột lẫn Tọa độ phần tửChuột di chuyển 1 pixel.Cập nhật startX, startY qua useState $\rightarrow$ React Re-render lần 1 để ghi nhớ tọa độ chuột mới.Tính toán xong, cập nhật vị trí phần tử qua Zustand/State $\rightarrow$ React Re-render lần 2 để dịch chuyển phần tử trên màn hình.👉 Kết quả: Component bị render 2 lần cho mỗi một pixel di chuyển. Giao diện giật lag điên cuồng vì React phải tính toán lại toàn bộ cấu trúc cây thư mục (DOM) liên tục.Kịch bản TỐT (Code hiện tại của bạn): Kết hợp useRef + ZustandChuột di chuyển 1 pixel.Cập nhật startX, startY vào useRef $\rightarrow$ Không re-render (Lặng lẽ ghi đè bộ nhớ, mất 0 mili-giây).Lấy giá trị đó tính toán nhanh, rồi chỉ cập nhật vị trí phần tử qua Zustand $\rightarrow$ React Re-render đúng 1 lần duy nhất để dịch chuyển phần tử trên màn hình.👉 Kết quả: Giảm được 50% số lần re-render thừa thãi. Hệ thống chỉ tập trung tài nguyên vào việc duy nhất: Vẽ lại vị trí mới của phần tử.
+// Giải thích về việc dùng useRef thay cho useState khi kéo chuột//////////////////////////////////////////////////////////
+
+Đúng là khi bạn kéo chuột, hàm updateElementPosition được gọi liên tục → Zustand Store cập nhật → React buộc phải re-render.
+
+Tuy nhiên, bí quyết tối ưu ở đây nằm ở chỗ: React chỉ re-render những gì bắt buộc phải đổi trên giao diện (Vị trí phần tử), chứ nó không re-render các biến tính toán của chuột.
+
+Nếu bạn không tách biệt bằng useRef mà gộp hết vào useState, hệ thống sẽ bị dính hiện tượng "Nhân đôi gánh nặng" (Double Re-render):
+
+Cùng so sánh kịch bản để thấy sự khác biệt:
+❌ Kịch bản TỆ: Dùng useState cho cả Tọa độ chuột lẫn Tọa độ phần tử
+Chuột di chuyển 1 pixel.
+
+Cập nhật startX, startY qua useState → React Re-render lần 1 để ghi nhớ tọa độ chuột mới.
+
+Tính toán xong, cập nhật vị trí phần tử qua Zustand/State → React Re-render lần 2 để dịch chuyển phần tử trên màn hình.
+👉 Kết quả: Component bị render 2 lần cho mỗi một pixel di chuyển. Giao diện giật lag điên cuồng vì React phải tính toán lại toàn bộ cấu trúc cây thư mục (DOM) liên tục.
+
+Kịch bản TỐT (Code hiện tại của bạn): Kết hợp useRef + Zustand
+Chuột di chuyển 1 pixel.
+
+Cập nhật startX, startY vào useRef → Không re-render (Lặng lẽ ghi đè bộ nhớ, mất 0 mili-giây).
+
+Lấy giá trị đó tính toán nhanh, rồi chỉ cập nhật vị trí phần tử qua Zustand → React Re-render đúng 1 lần duy nhất để dịch chuyển phần tử trên màn hình.
+👉 Kết quả: Giảm được 50% số lần re-render thừa thãi. Hệ thống chỉ tập trung tài nguyên vào việc duy nhất: Vẽ lại vị trí mới của phần tử.
