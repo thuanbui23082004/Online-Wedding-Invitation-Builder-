@@ -3,9 +3,29 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
+import AdminDashboard from './AdminDashboard'
 
 function App() {
   const [count, setCount] = useState(0)
+  const [showAdmin, setShowAdmin] = useState(false)
+
+  if (showAdmin) {
+    return (
+      <div>
+        <button
+          onClick={() => setShowAdmin(false)}
+          style={{
+            position: 'fixed', top: 12, right: 12, zIndex: 9999,
+            background: '#C9A96E', color: '#fff', border: 'none',
+            borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 13,
+          }}
+        >
+          ✕ Đóng Admin
+        </button>
+        <AdminDashboard />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -27,6 +47,19 @@ function App() {
           onClick={() => setCount((count) => count + 1)}
         >
           Count is {count}
+        </button>
+
+        {/* Nút mở Admin Dashboard */}
+        <button
+          type="button"
+          onClick={() => setShowAdmin(true)}
+          style={{
+            marginTop: 12, background: '#C9A96E', color: '#fff',
+            border: 'none', borderRadius: 8, padding: '8px 20px',
+            cursor: 'pointer', fontSize: 14, fontWeight: 600,
+          }}
+        >
+          💍 Mở Admin Dashboard
         </button>
       </section>
 
@@ -63,11 +96,7 @@ function App() {
           <ul>
             <li>
               <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#github-icon"></use>
                 </svg>
                 GitHub
@@ -75,11 +104,7 @@ function App() {
             </li>
             <li>
               <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#discord-icon"></use>
                 </svg>
                 Discord
@@ -87,11 +112,7 @@ function App() {
             </li>
             <li>
               <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#x-icon"></use>
                 </svg>
                 X.com
@@ -99,11 +120,7 @@ function App() {
             </li>
             <li>
               <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
+                <svg className="button-icon" role="presentation" aria-hidden="true">
                   <use href="/icons.svg#bluesky-icon"></use>
                 </svg>
                 Bluesky
