@@ -14,7 +14,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
-    "ignoreDeprecations": "5.0", // Thêm dòng này để ẩn lỗi
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["src/*"]
     },
