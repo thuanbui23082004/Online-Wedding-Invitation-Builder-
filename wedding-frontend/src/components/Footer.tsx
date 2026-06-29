@@ -9,12 +9,11 @@ import { RevolvingHeartsIcon } from "../components/icons/emojione-revolving-hear
 
 export default function Footer() {
   return (
-    <footer className="bg-white font-poppins font-medium border-t border-zinc-100 pt-16 pb-8 text-left">
+    <footer id="lien-he" className="bg-white font-poppins font-medium border-t border-zinc-100 pt-16 pb-8 text-left">
       <div className="max-w-7xl mx-auto px-6">
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-zinc-100">
           
-          {/* Cột 1: Giới thiệu chung thương hiệu */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center gap-2">
               <RevolvingHeartsIcon size={28} color="#f43f5e" />
@@ -31,7 +30,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Cột 2: Danh mục Sản phẩm */}
           <div className="lg:col-span-3 space-y-4">
             <h4 className="text-sm font-black text-zinc-950 uppercase tracking-wider">Sản phẩm</h4>
             <ul className="space-y-2.5 text-sm text-zinc-500 font-medium">
@@ -44,7 +42,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Cột 3: Pháp lý */}
           <div className="lg:col-span-2 space-y-4">
             <h4 className="text-sm font-black text-zinc-950 uppercase tracking-wider">Pháp lý</h4>
             <ul className="space-y-2.5 text-sm text-zinc-500 font-medium">

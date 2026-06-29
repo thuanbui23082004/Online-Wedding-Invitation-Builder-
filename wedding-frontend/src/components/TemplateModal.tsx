@@ -1,8 +1,8 @@
 // src/components/TemplateModal.tsx
 import React, { useEffect, useRef } from "react";
 import type { TemplateItem } from "../data/templates";
-import { Button } from "../components/button"; // Khớp với đường dẫn button của bạn
-import { X, Heart, Palette, Sparkles, MapPin } from "lucide-react";
+import { Button } from "../components/button"; 
+import { X, Heart, Palette, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TemplateModalProps {
@@ -38,7 +38,6 @@ export default function TemplateModal({ template, isOpen, onClose }: TemplateMod
           onClick={handleOverlayClick}
           className="fixed inset-0 z-[150] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-4 md:p-6"
         >
-          {/* Khung chứa Modal chuyển động lướt nhẹ từ dưới lên */}
           <motion.div
             ref={dialogRef}
             initial={{ opacity: 0, y: 30, scale: 0.98 }}

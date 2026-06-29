@@ -15,13 +15,11 @@ import Image2 from '../../assets/images/2.png';
 import Image3 from '../../assets/images/3.png';
 import { templatesData, type TemplateItem } from '../../data/templates';
 import TemplateModal from '../../components/TemplateModal';
-import { RevolvingHeartsIcon } from "../../components/icons/emojione-revolving-hearts";
 import { Footer } from "../../components/Footer";
+import Header from "../../components/Header";
 import {
     ArrowRight,
     LayoutTemplate,
-    Menu,
-    X,
     UsersRound,
     Sparkles,
     Share2,
@@ -36,55 +34,51 @@ import {
 
 import { Button } from '../../components/button';
 import "./style.css";
-import  { useState, useEffect } from 'react';
-import { cn } from '../../lib/utils';
-import { motion } from 'framer-motion';
+import  { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
-interface Testimonial {
-    text: string;
-    image: string;
-    name: string;
-    role: string;
-}
+// Reusable 3D Tilt Card Component using spring physics
+export const TiltCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
-export const testimonialsData: Testimonial[] = [
-  {
-    text: "Tụi mình tự tạo thiệp cưới trên DearLove chỉ mất chưa đầy 15 phút. Giao diện kéo thả trực quan, hình ảnh lên nét căng và điều thích nhất là tính năng quản lý khách mời tham dự cực kỳ chính xác, đỡ hẳn khâu gọi điện xác nhận.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "Linh Đan",
-    role: "Cô dâu tháng 10",
-  },
-  {
-    text: "DearLove saved us so much time! Since my husband is American and I am Vietnamese, we needed a platform that supports multiple languages effortlessly. Our guests from New York and Hanoi loved the elegant bilingual design.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "David & Thu Hồng",
-    role: "Đám cưới Việt - Mỹ",
-  },
-  {
-    text: "Nhận được link thiệp cưới từ bạn thân mà bất ngờ vì giao diện dễ thương quá! Có cả bản đồ chỉ đường, nhạc nền tự động phát và khu vực gửi lời chúc trực tuyến rất ý nghĩa. Mình đã bấm xác nhận tham dự ngay trên thiệp.",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "Minh Thư",
-    role: "Khách mời dự tiệc",
-  },
-  {
-    text: "As an expat living in Da Nang, planning a wedding locally was challenging until I found DearLove. The digital invitations are stunning, modern, and incredibly easy to share via WhatsApp and social media with my family back home.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "Michael Green",
-    role: "Chú rể ngoại quốc tại Việt Nam",
-  },
-  {
-    text: "Tính năng nhận lời chúc trực tuyến của DearLove là kho tàng kỷ niệm vô giá đối với tụi mình. Đêm tân hôn hai vợ chồng ngồi mở danh sách ra đọc từng lời chúc bằng cả tiếng Việt lẫn tiếng Anh của bạn bè mà vừa cười vừa xúc động.",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "Ngọc Anh",
-    role: "Cô dâu mới",
-  },
-  {
-    text: "Ce site là là fantastique! Thiết kế tinh tế chuẩn gu châu Âu, hệ thống phông chữ cực kỳ sang trọng. Nó giải quyết hoàn hảo bài toán gửi thiệp cưới nhanh chóng cho các cặp đôi có bạn bè, gia đình sinh sống ở nhiều quốc gia khác nhau.",
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150&h=150",
-    name: "Thomas & Minh Anh",
-    role: "Cặp đôi Việt - Pháp",
-  },
-];
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), { stiffness: 180, damping: 20 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), { stiffness: 180, damping: 20 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width - 0.5);
+    y.set((e.clientY - rect.top) / rect.height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      className={className}
+    >
+      <div style={{ transform: "translateZ(12px)" }} className="w-full h-full">
+        {children}
+      </div>
+    </motion.div>
+  );
+};
+
+import { testimonialsData, type Testimonial } from '../../data/testimonials';
+import FloatingBackgroundHearts from '../../components/FloatingBackgroundHearts';
 
 const firstColumn = testimonialsData.slice(0, 2);
 const secondColumn = testimonialsData.slice(2, 4);
@@ -131,7 +125,7 @@ const TestimonialsColumn = ({ className, testimonials, duration }: any) => {
 
 const TestimonialsSection = () => {
     return (
-        <div className="container px-40 mx-auto">
+        <div id="danh-gia" className="container px-40 mx-auto">
             <div className="flex flex-col items-center justify-center max-w-3xl mx-auto mb-20 text-center">
                 <div className="inline-block px-6 py-2 rounded-full bg-white border border-rose-100 text-[11px] font-bold uppercase tracking-[0.5em] text-rose-400 shadow-sm mb-8">
                     FEEDBACK
@@ -200,20 +194,36 @@ function FAQSection() {
               <div key={idx} className="py-4 text-left">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between py-2 text-zinc-900 font-poppins font-bold text-base md:text-md hover:text-rose-600 transition-colors duration-300 group"
+                  className="w-full flex items-center justify-between py-2 text-zinc-900 font-poppins font-bold text-base md:text-md hover:text-rose-600 transition-colors duration-300 group cursor-pointer"
                 >
                   <span className="pr-4 tracking-tight leading-snug">{faq.q}</span>
-                  <div className={`w-8 h-8 rounded-full bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-500 transition-all duration-300 shrink-0 ${isOpen ? "rotate-180 bg-rose-50 text-rose-500" : ""}`}>
+                  <motion.div 
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 shrink-0 ${isOpen ? "bg-rose-50 text-rose-500" : "bg-zinc-50 text-zinc-400 group-hover:bg-rose-50 group-hover:text-rose-500"}`}
+                  >
                     <ChevronDown size={18} />
-                  </div>
+                  </motion.div>
                 </button>
-                <div className={`grid transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}>
-                  <div className="overflow-hidden">
-                    <p className="text-sm md:text-base text-zinc-500 font-medium leading-relaxed pb-3 pr-6">
-                      {faq.a}
-                    </p>
-                  </div>
-                </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial="collapsed"
+                      animate="open"
+                      exit="collapsed"
+                      variants={{
+                        open: { opacity: 1, height: "auto", marginTop: 8 },
+                        collapsed: { opacity: 0, height: 0, marginTop: 0 }
+                      }}
+                      transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                      className="overflow-hidden"
+                    >
+                      <p className="text-sm md:text-base text-zinc-500 font-medium leading-relaxed pb-3 pr-6">
+                        {faq.a}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
@@ -254,110 +264,7 @@ function FinalCTA() {
 }
 
 
-export const Header = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const navLinks = [
-        { name: 'Trang chủ', href: '#trang-chu' },
-        { name: 'Mẫu thiệp', href: '#mau-thiep' },
-        { name: 'Thiệp đã tạo', href: '#thiep-da-tao' },
-        { name: 'Đánh giá', href: '#danh-gia' },
-        { name: 'Liên hệ', href: '#lien-he' },
-    ];
-
-    return (
-            <header className="fixed top-0 left-0 right-0 z-100 pt-6 px-4 pointer-events-none font-sans transition-all duration-300">
-              <nav className={cn(
-                  "mx-auto pointer-events-auto bg-white/80 backdrop-blur-xl border transition-all ease-[cubic-bezier(0.34,1.56,0.64,1)] duration-500 delay-0",			
-                  isScrolled 
-                      ? 'max-w-5xl py-2 px-6 rounded-full shadow-[0_12px_40px_rgba(244,63,94,0.15)] bg-white/90 border-rose-100 translate-y-1 scale-[0.98]' 
-                      : 'max-w-7xl py-2 px-10 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.05)] bg-white/90 border-rose-100'
-              )}>
-                  <div className="flex justify-between items-center h-14">
-                      <div className="flex items-center gap-2.5 shrink-0 group cursor-pointer">
-                          <div className="bg-rose-100 p-2 rounded-xl transition-transform group-hover:rotate-12">
-                              <RevolvingHeartsIcon size={28} color="#f43f5e" />
-                          </div>
-                          <span className="text-2xl font-serif font-black text-zinc-800">DearLove</span>
-                      </div>
-
-                      <div className="hidden md:flex items-center space-x-1">
-                          {navLinks.map((link) => (
-                              <a
-                                  key={link.name}
-                                  href={link.href}
-                                  className={cn(
-                                      "px-4 py-2 text-[15px] font-medium rounded-full transition-all flex items-center gap-1",
-                                      link.href === "/" || link.name === "Trang chủ" 
-                                          ? "text-rose-600 font-bold bg-rose-50/50" 
-                                          : "text-gray-600 hover:text-gray-950 hover:bg-gray-50/50"
-                                  )}
-                              >
-                                  {link.name}
-                                  {['Security', 'Document', 'Integration'].includes(link.name) && (
-                                      <ChevronDown className="h-3.5 w-3.5 opacity-40" />
-                                  )}
-                              </a>
-                          ))}
-                      </div>
-
-                      <div className="flex items-center space-x-2 ml-auto md:ml-0">
-                          <Link to="/login" className="block">
-                              <Button variant="ghost" className="font-semibold text-gray-600 hover:text-rose-600 text-sm md:text-base px-3 md:px-4">
-                                  Đăng nhập
-                              </Button>
-                          </Link>
-                          <Link to="/signup" className="hidden md:inline-block">
-                              <Button 
-                            variant="default" 
-                            className="rounded-xl px-6 bg-rose-600/80 hover:bg-rose-700/80 text-white transition-transform group-hover:rotate-12 shadow-none">
-                            Đăng ký
-                          </Button>
-                          </Link>
-                      </div>
-
-                      <div className="md:hidden ml-1">
-                          <Button variant="ghost" size="icon" className="rounded-full hover:bg-rose-50" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                              {isMenuOpen ? <X className="h-5 w-5 text-rose-600" /> : <Menu className="h-5 w-5" />}
-                          </Button>
-                      </div>
-                  </div>
-
-                  {isMenuOpen && (
-                      <div className="md:hidden mt-4 py-4 bg-white/95 rounded-2xl border border-rose-100/60 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                          <div className="space-y-1 px-4">
-                              {navLinks.map((link) => (
-                                  <a
-                                      key={link.name}
-                                      href={link.href}
-                                      className={cn(
-                                          "flex items-center justify-between w-full px-4 py-3 text-base font-medium rounded-xl transition-colors",
-                                          link.href === "/" || link.name === "Trang chủ"
-                                              ? "bg-rose-50 text-rose-600 font-bold"
-                                              : "text-gray-700 hover:bg-zinc-50"
-                                      )}
-                                      onClick={() => setIsMenuOpen(false)}
-                                  >
-                                      {link.name}
-                                      <ChevronDown className="h-4 w-4 -rotate-90 opacity-30" />
-                                  </a>
-                              ))}
-                          </div>
-                      </div>
-                  )}
-              </nav>
-          </header>
-    );
-};
+// Local Header extracted to src/components/Header.tsx
 
 const templatesRow1 = [
     { src: WeddingImg1, alt: "Mẫu thiệp 1" },
@@ -389,7 +296,6 @@ const templatesRow1 = [
   ];
 
 const LandingPage: React.FC = () => {
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -406,24 +312,29 @@ const LandingPage: React.FC = () => {
       return () => clearInterval(interval);
     }, []);
     const galleryImages = [WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5, WeddingImg6];
-    // Nhân đôi mảng để tạo luồng chạy lặp vô tận không có điểm đứt
     const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
     const doubleImages = [...galleryImages, ...galleryImages];
-    return (
 
-        <div className="min-h-screen bg-white">
+    return (
+        <div className="min-h-screen font-poppins bg-white">
             <Header/>
             <section className="relative min-h-screen bg-linear-to-br from-rose-50/50 via-white to-pink-50/30 pt-32 pb-20 px-6 md:px-12 lg:px-20 overflow-hidden flex items-center">
               <div className="absolute inset-0 -z-10 pointer-events-none">
                 <div className="absolute top-1/4 left-[10%] w-96 h-96 bg-rose-200/40 rounded-full blur-3xl animate-pulse duration-6000" />
                 <div className="absolute bottom-1/4 right-[10%] w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-pulse duration-8000" />
+                <FloatingBackgroundHearts />
               </div>
               
               <div className="max-w-6xl mx-auto w-full space-y-16">
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
-                  <div className="lg:col-span-6 text-left space-y-6 z-10">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="lg:col-span-6 text-left space-y-6 z-10"
+                  >
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-900 leading-[1.15]">
                       Đổi mới cách gửi lời mời
                       <br />{" "}
@@ -456,7 +367,7 @@ const LandingPage: React.FC = () => {
                     </span>
                     </h1>
 
-                    <p className="text-base  md:text-lg text-black-500 max-w-xl leading-relaxed">
+                    <p className="text-base  md:text-md text-black-500 max-w-xl leading-relaxed">
                       Giải pháp tạo thiệp online đột phá giúp bạn gửi lời mời chuyên nghiệp chỉ qua một đường link, tiết kiệm tối đa chi phí in ấn và thời gian chuẩn bị.
                     </p>
 
@@ -479,19 +390,24 @@ const LandingPage: React.FC = () => {
                     
                     <div className="lg:col-span-6" />
 
-                  </div>
+                  </motion.div>
 
-                <div className="lg:col-span-6 relative h-125 md:h-150 w-full grid grid-cols-3 gap-4 overflow-hidden rounded-3xl mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)">
+                  <motion.div 
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 }}
+                    className="lg:col-span-6 relative h-125 md:h-150 w-full grid grid-cols-3 gap-4 overflow-hidden rounded-3xl mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)"
+                  >
                   <div className="relative w-full h-full overflow-hidden backdrop-blur-sm bg-white/20">
                     <motion.div 
-                      className="flex flex-col gap-4 pb-4"
-                      animate={{ y: [0, -1200] }}
-                      transition={{
-                        repeat: Infinity,
-                        repeatType: "loop",
-                        duration: 28,
-                        ease: "linear",
-                      }}
+                       className="flex flex-col gap-4 pb-4"
+                       animate={{ y: [0, -1200] }}
+                       transition={{
+                         repeat: Infinity,
+                         repeatType: "loop",
+                         duration: 28,
+                         ease: "linear",
+                       }}
                     >
                     {[...templatesRow1, ...templatesRow3, ...templatesRow1].map((item, idx) => (
                       <div key={idx} className="w-full aspect-3/4 rounded-2xl overflow-hidden border border-rose-100/50 shadow-md bg-white p-1.5 group cursor-pointer hover:border-rose-200 transition-colors opacity-70 hover:opacity-100">
@@ -550,7 +466,7 @@ const LandingPage: React.FC = () => {
                     ))}
                     </motion.div>
                   </div>
-                </div>
+                </motion.div>
                 </div>
 
               </div>
@@ -560,8 +476,14 @@ const LandingPage: React.FC = () => {
             {/* Planning & Features Section */}
             <section className="py-20 bg-white" id="document">
               <div className="max-w-6xl mx-auto px-6">
-                  <div className="text-center mb-16 ">
-                      <h2 className="text-2xl md:text-4xl font-black tracking-tighter text-zinc-900 uppercase leading-tight">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="text-center mb-16 "
+                  >
+                      <h2 className="text-2xl md:text-4xl font-extrabold tracking-tighter text-zinc-900 leading-tight">
                           Bạn đang có kế hoạch {""} 
                           <span className="inline-block mx-1 md:mx-2 align-text-top">
                               <svg 
@@ -582,15 +504,26 @@ const LandingPage: React.FC = () => {
                           <br className="hidden sm:block" />mời tiệc{" "}
                           <span className="text-rose-600 font-handwritten italic text-5xl md:text-9xl relative inline-block ml-1 md:ml-2 leading-none">
                               100<span className=" non-italic text-4xl md:text-6xl align-super ml-0.5">+</span>
-                          </span>
-                          <br className="hidden sm:block" />
-                          khách
+                          </span>khách
                       </h2>
                       <div className="text-rose-400 text-2xl mt-2 animate-bounce"></div>
-                  </div>
+                  </motion.div>
 
                   {/* Pain points */}
-                  <div className="grid md:grid-cols-3 gap-8 mb-24">
+                  <motion.div 
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={{
+                      hidden: {},
+                      visible: {
+                        transition: {
+                          staggerChildren: 0.15
+                        }
+                      }
+                    }}
+                    className="grid md:grid-cols-3 gap-8 mb-24"
+                  >
                       {[
                           {
                               imgSrc: Image1, 
@@ -608,19 +541,32 @@ const LandingPage: React.FC = () => {
                               desc: "một cách chính xác"
                           } 
                       ].map((item, idx) => (
-                          <div key={idx} className="bg-white border border-rose-50 rounded-4xl p-10 md:p-10 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(244,63,94,0.08)] transition-all duration-500 text-center flex flex-col items-center group hover:-translate-y-1">
-                              <div className="w-24 h-24 bg-linear-to-br flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">
-                                  {item.imgSrc && <img src={item.imgSrc} alt={item.title} className="w-35 h-35 object-contain" />}
+                          <motion.div
+                            key={idx}
+                            variants={{
+                              hidden: { opacity: 0, y: 35 },
+                              visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                            }}
+                            className="h-full"
+                          >
+                            <TiltCard className="h-full">
+                              <div className="bg-white border border-rose-50 rounded-4xl p-10 md:p-10 shadow-[0_15px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(244,63,94,0.08)] transition-all duration-500 text-center flex flex-col items-center group h-full justify-between select-none">
+                                  <div className="w-24 h-24 bg-linear-to-br flex items-center justify-center text-4xl mb-6 group-hover:scale-110 transition-transform duration-500">
+                                      {item.imgSrc && <img src={item.imgSrc} alt={item.title} className="w-35 h-35 object-contain" />}
+                                  </div>
+                                  <div className="space-y-2">
+                                      <h3 className="text-md font-poppins font-bold text-zinc-900 mb-2 tracking-tight">
+                                          {item.title}
+                                      </h3>
+                                      <p className="text-md text-zinc-500 font-medium leading-relaxed">
+                                          {item.desc}
+                                      </p>
+                                  </div>
                               </div>
-                              <h3 className="text-md font-poppins font-bold text-zinc-900 mb-2 tracking-tight">
-                                  {item.title}
-                              </h3>
-                              <p className="text-md text-zinc-500 font-medium leading-relaxed">
-                                  {item.desc}
-                              </p>
-                          </div>
+                            </TiltCard>
+                          </motion.div>
                       ))}
-                  </div>
+                  </motion.div>
                   <div className="relative overflow-hidden bg-linear-to-b from-rose-50/30 to-transparent border border-rose-100 rounded-[4rem] p-12 md:p-20 text-center shadow-sm">
                       <div className="relative z-10 max-w-3xl mx-auto space-y-6">
                           <h3 className="text-xl md:text-3xl font-bold tracking-tight text-zinc-900 uppercase">
@@ -643,7 +589,20 @@ const LandingPage: React.FC = () => {
                   </div>
               </div>
           </section>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-6 mt-12 mb-32">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            hidden: {},
+            visible: {
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-6 mt-12 mb-32"
+        >
           {[
             {
               title: "Thiết kế kéo thả nhanh chóng",
@@ -674,29 +633,37 @@ const LandingPage: React.FC = () => {
               bgDeco: "bg-orange-50 border-orange-100",
             },
           ].map((feat, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className="relative overflow-hidden bg-white border border-zinc-100 rounded-4xl p-8 min-h-80 flex flex-col justify-between text-left shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-500 group cursor-default"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+              }}
+              className="h-full"
             >
-              <div className="space-y-4 relative z-10">
-                <h4 className="text-xl font-poppins font-semibold text-zinc-900 leading-snug tracking-tight group-hover:text-rose-600 transition-colors duration-300">
-                  {feat.title}
-                </h4>
-                <p className="text-sm font-poppins text-zinc-900 font-medium leading-relaxed">
-                  {feat.desc}
-                </p>
-              </div>
+              <TiltCard className="h-full">
+                <div className="relative overflow-hidden bg-white border border-zinc-100 rounded-4xl p-8 min-h-80 flex flex-col justify-between text-left shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-500 group cursor-default select-none h-full">
+                  <div className="space-y-4 relative z-10">
+                    <h4 className="text-xl font-poppins font-semibold text-zinc-900 leading-snug tracking-tight group-hover:text-rose-600 transition-colors duration-300">
+                      {feat.title}
+                    </h4>
+                    <p className="text-sm font-poppins text-zinc-900 font-medium leading-relaxed">
+                      {feat.desc}
+                    </p>
+                  </div>
 
-              <div className={`absolute -bottom-6 -right-6 w-32 h-32 rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out border ${feat.bgDeco}`}>
-                <span className={`${feat.iconColor} -translate-x-2 -translate-y-2 group-hover:rotate-12 transition-transform duration-500`}>
-                    {feat.icon}
-                </span>
-              </div>
-            </div>
+                  <div className={`absolute -bottom-6 -right-6 w-32 h-32 rounded-full flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-out border ${feat.bgDeco}`}>
+                    <span className={`${feat.iconColor} -translate-x-2 -translate-y-2 group-hover:rotate-12 transition-transform duration-500`}>
+                        {feat.icon}
+                    </span>
+                  </div>
+                </div>
+              </TiltCard>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <section className="py-20 bg-white">
+        <section id="mau-thiep" className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-left mb-12 max-w-3xl">
               <div className="flex items-center gap-2 text-rose-500 font-bold mb-2">
@@ -715,38 +682,40 @@ const LandingPage: React.FC = () => {
             <div className="relative group/carousel">
               <div className="flex gap-6 overflow-x-auto pb-8 pt-4 snap-x no-scrollbar scroll-smooth">
                 {templatesData.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="shrink-0 w-48 md:w-52 snap-start bg-white rounded-3xl overflow-hidden border border-zinc-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(244,63,94,0.08)] transition-all duration-500 group/card text-left"                  >
-                    <div className="relative aspect-3/4 overflow-hidden bg-zinc-50">
-                      <img 
-                        src={item.mainImage} 
-                        alt={item.title} 
-                        className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
-                      />
-                      
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-                        <Button 
-                          onClick={() => handleOpenModal(item)} 
-                          className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm px-6 py-2.5 shadow-md active:scale-95 transition-all"
-                        >
-                          Xem mẫu
-                        </Button>
+                  <div key={item.id} className="shrink-0 w-48 md:w-52 snap-start">
+                    <TiltCard>
+                      <div className="bg-white rounded-3xl overflow-hidden border border-zinc-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(244,63,94,0.08)] transition-all duration-500 group/card text-left select-none">
+                        <div className="relative aspect-3/4 overflow-hidden font-poppins bg-zinc-50">
+                          <img 
+                            src={item.mainImage} 
+                            alt={item.title} 
+                            className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700"
+                          />
+                          
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+                            <Button 
+                              onClick={() => handleOpenModal(item)} 
+                              className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm px-6 py-2.5 shadow-md active:scale-95 transition-all"
+                            >
+                              Xem mẫu
+                            </Button>
+                          </div>
+
+                          <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[10px] font-black tracking-widest text-zinc-800 px-3 py-1 rounded-full border border-zinc-100 shadow-sm uppercase">
+                            {item.tag}
+                          </span>
+                        </div>
+
+                        <div className="p-5 space-y-1 font-poppins">
+                          <h4 className="font-bold text-zinc-800 text-base tracking-tight truncate group-hover/card:text-rose-600 transition-colors">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                            Mã: {item.code}
+                          </p>
+                        </div>
                       </div>
-
-                      <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[10px] font-black tracking-widest text-zinc-800 px-3 py-1 rounded-full border border-zinc-100 shadow-sm uppercase">
-                        {item.tag}
-                      </span>
-                    </div>
-
-                    <div className="p-5 space-y-1">
-                      <h4 className="font-bold text-zinc-800 text-base tracking-tight truncate group-hover/card:text-rose-600 transition-colors">
-                        {item.title}
-                      </h4>
-                      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                        Mã: {item.code}
-                      </p>
-                    </div>
+                    </TiltCard>
                   </div>
                 ))}
               </div>
@@ -776,7 +745,13 @@ const LandingPage: React.FC = () => {
         />
         <section className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 space-y-3">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="text-center mb-16 space-y-3"
+            >
               <h2 className="text-3xl md:text-5xl font-bold text-zinc-900 tracking-tight">
                 Tạo thiệp cưới online trong{" "}
                 <span className="text-rose-500 font-handwritten italic text-4xl md:text-6xl px-1 relative inline-block animate-pulse">
@@ -786,10 +761,23 @@ const LandingPage: React.FC = () => {
               <p className="text-zinc-500 text-sm md:text-base font-semibold tracking-wide">
                 Dễ dàng thao tác • Kho mẫu đa dạng, cập nhật liên tục
               </p>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
-              <div className="lg:col-span-7 relative pl-8 md:pl-10 text-left space-y-16">
+              <motion.div 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={{
+                  hidden: {},
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.15
+                    }
+                  }
+                }}
+                className="lg:col-span-7 relative pl-8 md:pl-10 text-left space-y-16"
+              >
                 
                 <div className="absolute left-5.75 top-6 bottom-6 w-0.5 bg-rose-100" />
                 {[
@@ -812,7 +800,14 @@ const LandingPage: React.FC = () => {
                     icon: <Send size={25} className="text-white -translate-x-0.5 translate-y-0.5" />,
                   },
                 ].map((item, idx) => (
-                  <div key={idx} className="relative flex gap-6 group">
+                  <motion.div 
+                    key={idx} 
+                    variants={{
+                      hidden: { opacity: 0, x: -30 },
+                      visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
+                    }}
+                    className="relative flex gap-6 group"
+                  >
                     
                     <div className="absolute -left-8 w-12 h-12 rounded-full bg-rose-600/50 flex items-center justify-center shadow-[0_0_0_6px_rgba(244,63,94,0.1)] group-hover:scale-110 group-hover:bg-rose-600 transition-all duration-300 z-10">
                       {item.icon}
@@ -830,11 +825,17 @@ const LandingPage: React.FC = () => {
                       </p>
                     </div>
 
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
-              <div className="lg:col-span-5 flex justify-center">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="lg:col-span-5 flex justify-center"
+              >
                 <div className="relative w-full max-w-85 aspect-9/16 rounded-[2.5rem] p-3 bg-zinc-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] border border-zinc-800 group/mockup overflow-hidden">
                   <div className="relative w-full h-full rounded-4xl overflow-hidden bg-zinc-100 flex items-center justify-center">
                     <img 
@@ -848,7 +849,7 @@ const LandingPage: React.FC = () => {
                     <div className="absolute inset-0 bg-zinc-900/10 group-hover/mockup:bg-zinc-900/0 transition-colors duration-500" />
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
             </div>
             
@@ -867,7 +868,7 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
        
-        <section className="py-24 bg-white" id="thong-ke">
+        <section className="py-24 bg-white" id="thiep-da-tao">
           <div className="w-full">
             
             <div className="text-center mb-16 font-sans space-y-3 max-w-7xl mx-auto px-6">
@@ -924,10 +925,7 @@ const LandingPage: React.FC = () => {
         <FAQSection />
         <FinalCTA/>
         <Footer/>
-        </div>
-        
-
-            
+        </div>       
     );
 };
 export default LandingPage;
