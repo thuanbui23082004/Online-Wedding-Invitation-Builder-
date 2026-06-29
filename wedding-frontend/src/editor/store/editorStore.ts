@@ -148,6 +148,9 @@ interface EditorActions {
     id: string,
     props: Partial<ShapeProperties>
   ) => void;
+  updateAnimationProps: (id: string, props: Partial<AnimationProperties>) => void;
+  applyGlobalAnimation: (presetId: string, preset: (index: number) => Partial<AnimationProperties>) => void;
+  triggerAnimationPreview: () => void;
   updateElementPosition: (id: string, x: number, y: number) => void;
   updateElementSize: (id: string, width: number, height: number) => void;
   updateElementRotation: (id: string, rotation: number) => void;
@@ -172,7 +175,6 @@ interface EditorActions {
   updateElementCrop: (id: string, cropData: ImageCropData, newWidth: number, newHeight: number) => void;
   updateCanvasBackground: (props: Partial<BackgroundProperties>) => void;
   addRecentColor: (color: string) => void;
-  updateAnimationProps: (id: string, props: Partial<AnimationProperties>) => void;
 }
 
 
@@ -221,6 +223,8 @@ const INITIAL_STATE: EditorState = {
   music: null,
   canvasBackground: INITIAL_BACKGROUND,
   recentColors: [],
+  animationPreviewTick: 0,
+  activeGlobalAnimationPreset: null,
 };
 
 // ── Store ─────────────────────────────────────────────────
@@ -233,7 +237,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     const { elements } = get();
     const updated = elements.map((el) => ({ ...el, isSelected: el.id === id }));
     const selected = id ? updated.find((el) => el.id === id) ?? null : null;
-    
+
     let activeTool = get().activeTool;
     if (selected) {
       if (selected.type === 'text') activeTool = 'text';
@@ -302,10 +306,10 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     const id = `el-shape-${Date.now()}`;
     const x = 50 + Math.random() * 80;
     const y = 50 + Math.random() * 80;
-    
+
     let width = 150;
     let height = 150;
-    
+
     if (shapeType === 'line') {
       width = 200;
       height = 4;
@@ -592,11 +596,11 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     if (historyIndex <= 0) return;
     const newIndex = historyIndex - 1;
     const state = JSON.parse(JSON.stringify(history[newIndex]));
-    set({ 
-      elements: state.elements, 
+    set({
+      elements: state.elements,
       canvasBackground: state.canvasBackground,
-      historyIndex: newIndex, 
-      selectedElement: null 
+      historyIndex: newIndex,
+      selectedElement: null
     });
   },
 
@@ -605,11 +609,11 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     if (historyIndex >= history.length - 1) return;
     const newIndex = historyIndex + 1;
     const state = JSON.parse(JSON.stringify(history[newIndex]));
-    set({ 
-      elements: state.elements, 
+    set({
+      elements: state.elements,
       canvasBackground: state.canvasBackground,
-      historyIndex: newIndex, 
-      selectedElement: null 
+      historyIndex: newIndex,
+      selectedElement: null
     });
   },
   // ── Animation ────────────────────────────────────────
@@ -624,7 +628,36 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       selectedElement?.id === id
         ? { ...selectedElement, animationProps: { ...(selectedElement.animationProps ?? DEFAULT_ANIMATION_PROPS), ...props } }
         : selectedElement;
-    set({ elements: updated, selectedElement: updatedSelected });
+    set({ elements: updated, selectedElement: updatedSelected, activeGlobalAnimationPreset: null });
+    get().pushHistory();
   },
 
+  applyGlobalAnimation: (presetId, preset) => {
+    const { elements, selectedElement } = get();
+    
+    // Sort elements by Y coordinate (or zIndex) to determine sequential order.
+    const sorted = [...elements].sort((a, b) => a.y - b.y);
+    
+    const updated = elements.map((el) => {
+      const index = sorted.findIndex(e => e.id === el.id);
+      const props = preset(index);
+      return {
+        ...el,
+        animationProps: { ...(el.animationProps ?? DEFAULT_ANIMATION_PROPS), ...props }
+      };
+    });
+
+    const updatedSelected = selectedElement
+      ? updated.find(el => el.id === selectedElement.id) ?? null
+      : null;
+
+    set({ elements: updated, selectedElement: updatedSelected, activeGlobalAnimationPreset: presetId });
+    get().pushHistory();
+    get().triggerAnimationPreview();
+  },
+
+  triggerAnimationPreview: () => {
+    set((state) => ({ animationPreviewTick: state.animationPreviewTick + 1 }));
+  }
 }));
+

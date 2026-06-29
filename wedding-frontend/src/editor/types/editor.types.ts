@@ -228,4 +228,6 @@ export interface EditorState {
   music: MusicProperties | null;
   canvasBackground: BackgroundProperties;
   recentColors: string[];
+  animationPreviewTick: number;
+  activeGlobalAnimationPreset: string | null;
 }

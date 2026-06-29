@@ -77,6 +77,7 @@ function DraggableElement({ element, zoom }: DraggableElementProps) {
     sendElementBackward,
     selectedElement,
     pushHistory,
+    animationPreviewTick,
   } = useEditorStore();
 
 
@@ -136,7 +137,7 @@ function DraggableElement({ element, zoom }: DraggableElementProps) {
       observer.disconnect();
       el.classList.remove('animate__animated', `animate__${ap.entryEffect}`);
     };
-  }, [ap.entryEnabled, ap.entryEffect, ap.entryDuration, ap.entryDelay, ap.entryEasing]);
+  }, [ap.entryEnabled, ap.entryEffect, ap.entryDuration, ap.entryDelay, ap.entryEasing, animationPreviewTick]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
