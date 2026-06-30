@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from './DashboardLayout'
@@ -35,7 +36,7 @@ export const MyPlan: React.FC = () => {
       id: 'pro',
       name: 'Chuyên nghiệp',
       tag: 'PRO',
-      price: { monthly: '199K' },
+      price: { monthly: '199K', lifetime: '1.990K' },
       period: billing === 'monthly' ? '/ tháng' : 'Dùng trọn đời',
       isHot: true,
       color: 'text-rose-600',
@@ -58,7 +59,7 @@ export const MyPlan: React.FC = () => {
       id: 'premium',
       name: 'Cao cấp VIP',
       tag: 'PREMIUM',
-      price: { monthly: '499K' },
+      price: { monthly: '499K', lifetime: '4.990K' },
       period: billing === 'monthly' ? '/ tháng' : 'Dùng trọn đời',
       color: 'text-amber-600',
       tagBg: 'bg-amber-100 text-amber-700',
@@ -95,9 +96,14 @@ export const MyPlan: React.FC = () => {
               onClick={() => setBilling('monthly')}
               className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${billing === 'monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
-             
-              Gói dịch vụ 
-              <span className="text-[10px] bg-emerald-10"></span>
+              Theo tháng
+            </button>
+            <button
+              onClick={() => setBilling('lifetime')}
+              className={`px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${billing === 'lifetime' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Trọn đời
+              <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-black">TIẾT KIỆM</span>
             </button>
           </div>
         </div>
@@ -155,7 +161,7 @@ export const MyPlan: React.FC = () => {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => navigate('/dashboard/payment', { state: { plan: serializablePlan } })}
+                      onClick={() => navigate('/dashboard/payment', { state: { plan: serializablePlan, billing } })}
                       className="w-full py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
                       style={plan.isHot
                         ? { background: 'linear-gradient(135deg, #e8607a, #c4395a)', boxShadow: '0 4px 16px rgba(232,96,122,0.35)' }

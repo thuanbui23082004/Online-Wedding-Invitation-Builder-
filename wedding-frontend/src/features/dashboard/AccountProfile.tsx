@@ -1,25 +1,67 @@
-import React, { useState } from 'react'
+
+import React, { useEffect, useState } from 'react'
 import { DashboardLayout } from './DashboardLayout'
+import { LoadingState } from '../../components/LoadingState'
+import { authApi } from '../../services/api'
+import type { UserProfile } from '../../services/api'
+import { useToast, useConfirm } from '../../components/ToastProvider'
 import { User, Lock, Camera, Crown, Check, Eye, EyeOff, Shield, Globe, Smartphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 type Tab = 'info' | 'security' | 'notifications'
 
 export const AccountProfile: React.FC = () => {
+  const toast = useToast()
+  const confirm = useConfirm()
+
   const [tab, setTab] = useState<Tab>('info')
   const [showPwd, setShowPwd] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [form, setForm] = useState({
-    fullName: 'Nguyen Van A',
-    email: 'nguyenA@example.com',
-    phone: '',
-    dob: '',
-    bio: '',
-  })
+  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', dob: '', bio: '' })
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+  useEffect(() => {
+    let active = true
+    authApi.getCurrentUser().then((u) => {
+      if (!active) return
+      setUser(u)
+      setForm({ fullName: u.fullName, email: u.email, phone: u.phone, dob: u.dob, bio: u.bio })
+      setLoading(false)
+    }).catch(() => {
+      toast.error('Không tải được thông tin tài khoản')
+      setLoading(false)
+    })
+    return () => { active = false }
+  }, [])
+
+  const handleSave = async () => {
+    if (!form.fullName.trim()) {
+      toast.warning('Tên hiển thị không được để trống')
+      return
+    }
+    try {
+      setSaving(true)
+      const updated = await authApi.updateProfile(form)
+      setUser(updated)
+      toast.success('Đã lưu thông tin tài khoản')
+    } catch {
+      toast.error('Lưu thất bại, vui lòng thử lại')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    const ok = await confirm({
+      title: 'Xóa tài khoản vĩnh viễn?',
+      description: 'Toàn bộ thiệp, lời chúc, RSVP và dữ liệu của bạn sẽ bị xóa và không thể khôi phục.',
+      confirmText: 'Xóa tài khoản',
+      danger: true,
+    })
+    if (ok) {
+      toast.info('Yêu cầu xóa tài khoản đã được ghi nhận, đội ngũ sẽ liên hệ xác nhận qua email.')
+    }
   }
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -28,13 +70,21 @@ export const AccountProfile: React.FC = () => {
     { key: 'notifications', label: 'Thông báo', icon: <Smartphone size={14} /> },
   ]
 
+  if (loading || !user) {
+    return (
+      <DashboardLayout title="Tài khoản" subtitle="Quản lý thông tin cá nhân và bảo mật tài khoản">
+        <LoadingState label="Đang tải thông tin tài khoản..." />
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout title="Tài khoản" subtitle="Quản lý thông tin cá nhân và bảo mật tài khoản">
       <div className="max-w-3xl mx-auto space-y-5">
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
           <div className="flex items-center gap-4">
             <div className="relative flex-shrink-0">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl font-black shadow-md">N</div>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl font-black shadow-md">{user.avatarLetter}</div>
               <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white hover:bg-rose-600 transition-colors">
                 <Camera size={11} />
               </button>
@@ -44,7 +94,7 @@ export const AccountProfile: React.FC = () => {
               <p className="text-xs text-slate-400 mt-0.5">{form.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                  <Crown size={10} /> FREE PLAN
+                  <Crown size={10} /> {user.plan.toUpperCase()} PLAN
                 </span>
                 <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                   <Shield size={10} /> Đã xác minh
@@ -61,7 +111,6 @@ export const AccountProfile: React.FC = () => {
           </div>
         </div>
 
-
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex border-b border-slate-100">
             {tabs.map(t => (
@@ -76,7 +125,7 @@ export const AccountProfile: React.FC = () => {
           </div>
 
           <div className="p-6">
-           
+
             {tab === 'info' && (
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
@@ -129,10 +178,11 @@ export const AccountProfile: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+                    disabled={saving}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-sm font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
                     style={{ background: 'linear-gradient(135deg, #e8607a, #c4395a)' }}
                   >
-                    {saved ? <><Check size={15} /> Đã lưu!</> : 'Lưu thay đổi'}
+                    {saving ? 'Đang lưu...' : <><Check size={15} /> Lưu thay đổi</>}
                   </button>
                   <span className="text-xs text-slate-400">Thông tin sẽ được cập nhật ngay lập tức</span>
                 </div>
@@ -161,7 +211,10 @@ export const AccountProfile: React.FC = () => {
                   <input type="password" placeholder="Nhập lại mật khẩu mới..."
                     className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-rose-400 transition-all" />
                 </div>
-                <button className="px-5 py-2.5 rounded-lg text-white text-sm font-bold bg-slate-800 hover:bg-slate-900 transition-all">
+                <button
+                  onClick={() => toast.success('Đã cập nhật mật khẩu (demo)')}
+                  className="px-5 py-2.5 rounded-lg text-white text-sm font-bold bg-slate-800 hover:bg-slate-900 transition-all"
+                >
                   Cập nhật mật khẩu
                 </button>
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -199,9 +252,9 @@ export const AccountProfile: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-slate-700">Xóa tài khoản</div>
-              <div className="text-xs text-slate-400">Hành động này hoàn tác thì tất cả dữ liệu sẽ bị xóa</div>
+              <div className="text-xs text-slate-400">Hành động này không thể hoàn tác, tất cả dữ liệu sẽ bị xóa</div>
             </div>
-            <button className="px-3 py-2 text-xs font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+            <button onClick={handleDeleteAccount} className="px-3 py-2 text-xs font-bold text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
               Xóa tài khoản
             </button>
           </div>

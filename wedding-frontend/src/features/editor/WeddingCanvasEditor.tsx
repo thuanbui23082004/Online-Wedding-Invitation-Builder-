@@ -1,10 +1,14 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import * as fabric from 'fabric';
 import { EditorSidebar } from './components/EditorSidebar';
 import { EditorRightPanel } from './components/EditorRightPanel';
 import type { ActiveTool} from '../../types/editor';
-import { Eye, RotateCcw, RotateCw, Plus, Trash2, X, ZoomIn, ZoomOut, Sparkles, Copy, Layers, ArrowUp, ArrowDown } from 'lucide-react';
+import { Eye, RotateCcw, RotateCw, Plus, Trash2, X, ZoomIn, ZoomOut, Sparkles, Copy, Layers, ArrowUp, ArrowDown, Loader2, Check } from 'lucide-react';
+import { cardsApi } from '../../services/api';
+import type { WeddingCard } from '../../services/api';
+import { useToast, useConfirm } from '../../components/ToastProvider';
 
 const MOCK_TEMPLATE_DB: Record<string, any> = {
   'blank': {
@@ -135,12 +139,16 @@ const CardParticleEngine = ({ effectType }: { effectType: string | null }) => {
 
 export const WeddingCanvasEditor: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const toast = useToast();
+  const confirm = useConfirm();
   const canvasElRef = useRef<HTMLCanvasElement | null>(null);
   const fabricRef = useRef<fabric.Canvas | null>(null);
 
+  const passedCardId = searchParams.get('cardId');
   const passedTplId = searchParams.get('templateId') || 'blank';
   const passedBride = searchParams.get('bride') || 'Cô Dâu';
   const passedGroom = searchParams.get('groom') || 'Chú Rể';
+  const passedTitle = searchParams.get('title') || `${passedBride} & ${passedGroom}`;
 
   const [activeTool, setActiveTool] = useState<ActiveTool>('select');
   const [selectedProps, setSelectedProps] = useState<any>(null); 
@@ -159,8 +167,51 @@ export const WeddingCanvasEditor: React.FC = () => {
   ]);
   const [activePageIndex, setActivePageIndex] = useState(0);
 
+  const [_card, setCard] = useState<WeddingCard | null>(null);
+  const [cardId, setCardId] = useState<string | null>(passedCardId);
+  const [isReady, setIsReady] = useState(false); 
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+
+  const [publishForm, setPublishForm] = useState({ weddingDate: '', weddingTime: '18:30', venue: '' });
+
   useEffect(() => {
-    if (!canvasElRef.current) return;
+    let active = true;
+    (async () => {
+      try {
+        if (passedCardId) {
+          const existing = await cardsApi.get(passedCardId);
+          if (!active) return;
+          setCard(existing);
+          setCardId(existing.id);
+          setPublishForm({
+            weddingDate: existing.weddingDate || '',
+            weddingTime: existing.weddingTime || '18:30',
+            venue: existing.venue || '',
+          });
+          if (existing.canvasData?.pages?.length) {
+            setPages(existing.canvasData.pages);
+            if (existing.canvasData.canvasWidth) setCanvasWidth(existing.canvasData.canvasWidth);
+            if (existing.canvasData.canvasHeight) setCanvasHeight(existing.canvasData.canvasHeight);
+          }
+        } else {
+          const draft = await cardsApi.create({ title: passedTitle, bride: passedBride, groom: passedGroom });
+          if (!active) return;
+          setCard(draft);
+          setCardId(draft.id);
+        }
+      } catch (e: any) {
+        toast.error(e?.message || 'Không thể khởi tạo thiệp, vui lòng thử lại');
+      } finally {
+        if (active) setIsReady(true);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!isReady || !canvasElRef.current) return;
 
     const canvas = new fabric.Canvas(canvasElRef.current, { 
       width: canvasWidth, 
@@ -176,25 +227,33 @@ export const WeddingCanvasEditor: React.FC = () => {
       cornerSize: 10,
       transparentCorners: false,
     });
+    
 
-    const templateLayout = MOCK_TEMPLATE_DB[passedTplId] || MOCK_TEMPLATE_DB['blank'];
-    canvas.backgroundColor = templateLayout.background;
+    const existingPageData = pages[0]?.data;
 
-    const customObjects = templateLayout.objects.map((obj: any) => {
-      if (obj.type === 'textbox') {
-        return { ...obj, text: obj.text.replace(/{{BRIDE}}/g, passedBride).replace(/{{GROOM}}/g, passedGroom) };
-      }
-      return obj;
-    });
+    if (existingPageData) {
+      canvas.loadFromJSON(existingPageData, () => canvas.renderAll());
+    } else {
 
-    canvas.loadFromJSON({ background: templateLayout.background, objects: customObjects }, () => {
-      canvas.renderAll();
-      setPages((prev) => {
-        const newPages = [...prev];
-        newPages[0].data = canvas.toJSON();
-        return newPages;
+      const templateLayout = MOCK_TEMPLATE_DB[passedTplId] || MOCK_TEMPLATE_DB['blank'];
+      canvas.backgroundColor = templateLayout.background;
+
+      const customObjects = templateLayout.objects.map((obj: any) => {
+        if (obj.type === 'textbox') {
+          return { ...obj, text: obj.text.replace(/{{BRIDE}}/g, passedBride).replace(/{{GROOM}}/g, passedGroom) };
+        }
+        return obj;
       });
-    });
+
+      canvas.loadFromJSON({ background: templateLayout.background, objects: customObjects }, () => {
+        canvas.renderAll();
+        setPages((prev) => {
+          const newPages = [...prev];
+          newPages[0].data = canvas.toJSON();
+          return newPages;
+        });
+      });
+    }
 
     const updateToolbar = () => {
       const obj = canvas.getActiveObject() as any;
@@ -237,7 +296,7 @@ export const WeddingCanvasEditor: React.FC = () => {
       canvas.dispose();
     };
    
-  }, [passedTplId, passedBride, passedGroom, canvasWidth, canvasHeight]);
+  }, [isReady, passedTplId, passedBride, passedGroom, canvasWidth, canvasHeight]);
 
   const updateProp = (key: string, val: any) => {
     const obj = fabricRef.current?.getActiveObject() as any;
@@ -269,25 +328,21 @@ export const WeddingCanvasEditor: React.FC = () => {
 
   const refreshCountdownWidgets = () => {
     const canvas = fabricRef.current;
-    console.debug('[countdown] refresh called, canvas=', !!canvas);
     if (!canvas) return;
 
     const objects = canvas.getObjects();
-    console.debug('[countdown] total objects on canvas=', objects.length);
 
     let needsRender = false;
-    objects.forEach((obj: any, idx: number) => {
+    objects.forEach((obj: any) => {
       if (obj.data?.widgetType === 'countdown') {
         const data = obj.data.widgetData || { date: '2026-06-29', time: '18:30', lang: 'vi' };
         const values = computeCountdownValues(data.date, data.time);
-        console.debug(`[countdown] widget #${idx} data=`, data, 'values=', values);
         let widgetChanged = false;
         const children = obj.getObjects?.() || [];
         children.forEach((child: any) => {
           if (child?.widgetItemId?.startsWith('countdown-value-')) {
             const part = Number(child.widgetItemId.split('-').pop());
             if (part >= 0 && values[part] && child.text !== values[part]) {
-              console.debug('[countdown] updating child', child.widgetItemId, '->', values[part]);
               child.set('text', values[part]);
               widgetChanged = true;
             }
@@ -299,7 +354,6 @@ export const WeddingCanvasEditor: React.FC = () => {
               : part === 2 ? (data.lang === 'en' ? 'Minutes' : 'Phút')
               : (data.lang === 'en' ? 'Seconds' : 'Giây');
             if (child.text !== label) {
-              console.debug('[countdown] updating label', child.widgetItemId, '->', label);
               child.set('text', label);
               widgetChanged = true;
             }
@@ -312,7 +366,6 @@ export const WeddingCanvasEditor: React.FC = () => {
       }
     });
     if (needsRender) {
-      console.debug('[countdown] canvas.renderAll()');
       canvas.renderAll();
     }
   };
@@ -488,6 +541,19 @@ export const WeddingCanvasEditor: React.FC = () => {
     setSelectedProps(null);
   };
 
+  const handleDeletePage = async (idx: number) => {
+    const ok = await confirm({
+      title: 'Xóa trang này?',
+      description: 'Nội dung của trang sẽ bị xóa khỏi thiệp.',
+      confirmText: 'Xóa trang',
+      danger: true,
+    });
+    if (!ok) return;
+    const newP = pages.filter((_, i) => i !== idx);
+    setPages(newP);
+    switchPage(0);
+  };
+
   const handleAddText = (txt: string, sz: number, style?: Record<string, unknown>) => {
     const t = new fabric.Textbox(txt, { left: 40, top: 250, width: canvasWidth - 80, fontSize: sz, textAlign: 'center', ...style });
     fabricRef.current?.add(t);
@@ -595,13 +661,11 @@ export const WeddingCanvasEditor: React.FC = () => {
       (text as any).widgetItemId = 'mapText';
       widgetObj = new fabric.Group([rect, pin, text], { left: cx - 160, top: cy - 100 });
       widgetObj.data = { widgetType: 'map', widgetData: { address: '', lat: '', lng: '', zoom: 15 } };
-      // attempt to load a default static map (centered at a default location)
       (async () => {
         const wd = widgetObj.data.widgetData || {};
         if (wd.lat && wd.lng) {
           await loadStaticMapForObject(widgetObj, wd.lat, wd.lng, wd.zoom || 15, !!GM_APY_KEY);
         } else {
-  
           await loadStaticMapForObject(widgetObj, 21.0278, 105.8342, wd.zoom || 13, !!GM_APY_KEY);
         }
       })();
@@ -667,6 +731,86 @@ export const WeddingCanvasEditor: React.FC = () => {
     fabricRef.current?.setDimensions({ width: w, height: h });
   };
 
+  const buildCanvasPayload = () => {
+    const canvas = fabricRef.current;
+    const updatedPages = [...pages];
+    if (canvas) {
+      updatedPages[activePageIndex] = { ...updatedPages[activePageIndex], data: canvas.toJSON() };
+    }
+    setPages(updatedPages);
+    return { pages: updatedPages, canvasWidth, canvasHeight };
+  };
+
+  const handleSaveDraft = async () => {
+    if (!cardId) return;
+    try {
+      setIsSavingDraft(true);
+      const payload = buildCanvasPayload();
+      await cardsApi.saveDraft(cardId, payload);
+      toast.success('Đã lưu bản nháp');
+    } catch (e: any) {
+      toast.error(e?.message || 'Lưu nháp thất bại');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const openPublishModal = () => {
+    if (!cardId) return;
+    setShowPublishModal(true);
+  };
+
+  const handleConfirmPublish = async () => {
+    if (!cardId) return;
+    if (!publishForm.weddingDate) {
+      toast.warning('Vui lòng chọn ngày cưới trước khi xuất bản');
+      return;
+    }
+    try {
+      setIsPublishing(true);
+      const payload = buildCanvasPayload();
+      await cardsApi.update(cardId, {
+        weddingDate: publishForm.weddingDate,
+        weddingTime: publishForm.weddingTime,
+        venue: publishForm.venue,
+      });
+      const published = await cardsApi.publish(cardId, payload);
+      setCard(published);
+      setPublishedUrl(`${window.location.origin}/thiep/${published.slug}`);
+      toast.success('Xuất bản thiệp thành công!');
+    } catch (e: any) {
+      toast.error(e?.message || 'Xuất bản thất bại, vui lòng thử lại');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleCopyPublishedLink = async () => {
+    if (!publishedUrl) return;
+    try {
+      await navigator.clipboard.writeText(publishedUrl);
+      toast.success('Đã sao chép link thiệp');
+    } catch {
+      toast.error('Không thể sao chép link');
+    }
+  };
+
+  const closePublishModal = () => {
+    setShowPublishModal(false);
+    setPublishedUrl(null);
+  };
+
+  if (!isReady) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#f3f1f6]">
+        <div className="flex flex-col items-center gap-3 text-slate-500">
+          <Loader2 size={28} className="animate-spin text-rose-500" />
+          <p className="text-sm font-medium">Đang khởi tạo trình thiết kế...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen select-none flex-col overflow-hidden bg-[#f3f1f6] font-sans">
       <header className="z-20 flex h-14 shrink-0 items-center justify-between bg-[#161620] px-6 text-white shadow-sm">
@@ -698,7 +842,15 @@ export const WeddingCanvasEditor: React.FC = () => {
             Xem trước
           </button>
           <button
-            onClick={() => setShowPublishModal(true)}
+            onClick={handleSaveDraft}
+            disabled={isSavingDraft}
+            className="flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-1.5 text-xs font-bold text-slate-200 transition-colors hover:bg-white/20 disabled:opacity-60"
+          >
+            {isSavingDraft ? <Loader2 size={13} className="animate-spin" /> : null}
+            {isSavingDraft ? 'Đang lưu...' : 'Lưu nháp'}
+          </button>
+          <button
+            onClick={openPublishModal}
             className="rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 px-5 py-1.5 text-xs font-bold text-white shadow-md shadow-rose-500/30 transition-opacity hover:opacity-90"
           >
             Xuất bản
@@ -785,11 +937,7 @@ export const WeddingCanvasEditor: React.FC = () => {
                     className="opacity-40 hover:text-rose-200 hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm('Xóa trang này?')) {
-                        const newP = pages.filter((_, i) => i !== idx);
-                        setPages(newP);
-                        switchPage(0);
-                      }
+                      handleDeletePage(idx);
                     }}
                   />
                 )}
@@ -837,23 +985,82 @@ export const WeddingCanvasEditor: React.FC = () => {
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
           <div className="relative w-full max-w-md space-y-6 rounded-3xl bg-white p-8 shadow-2xl">
-            <button onClick={() => setShowPublishModal(false)} className="absolute right-6 top-6 text-slate-400 hover:text-slate-700">
+            <button onClick={closePublishModal} className="absolute right-6 top-6 text-slate-400 hover:text-slate-700">
               <X size={20} />
             </button>
-            <div className="space-y-2 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl font-bold text-emerald-600">✓</div>
-              <h3 className="text-xl font-bold text-slate-900">Sẵn sàng xuất bản!</h3>
-              <p className="text-xs text-slate-500">Thiệp cưới của bạn sẽ được phát hành công khai.</p>
-            </div>
-            <button
-              onClick={() => {
-                alert('Đã đóng gói!');
-                setShowPublishModal(false);
-              }}
-              className="w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-4 text-sm font-bold text-white shadow-lg shadow-rose-500/30 transition-opacity hover:opacity-90"
-            >
-              Xác nhận Phát hành
-            </button>
+
+            {publishedUrl ? (
+              <>
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl font-bold text-emerald-600">
+                    <Check size={22} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">Xuất bản thành công!</h3>
+                  <p className="text-xs text-slate-500">Chia sẻ link bên dưới để khách mời xem thiệp của bạn.</p>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                  <span className="flex-1 truncate text-xs font-medium text-slate-600">{publishedUrl}</span>
+                  <button onClick={handleCopyPublishedLink} className="shrink-0 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-600">
+                    Sao chép
+                  </button>
+                </div>
+                <a
+                  href={publishedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block w-full rounded-xl border border-slate-200 py-3 text-center text-sm font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Xem thiệp công khai
+                </a>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-xl font-bold text-rose-600">✓</div>
+                  <h3 className="text-xl font-bold text-slate-900">Sẵn sàng xuất bản!</h3>
+                  <p className="text-xs text-slate-500">Điền thông tin tiệc cưới để khách mời xem được lịch trình &amp; đếm ngược.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">NGÀY CƯỚI <span className="text-rose-500">*</span></label>
+                    <input
+                      type="date"
+                      value={publishForm.weddingDate}
+                      onChange={(e) => setPublishForm({ ...publishForm, weddingDate: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">GIỜ TỔ CHỨC</label>
+                    <input
+                      type="time"
+                      value={publishForm.weddingTime}
+                      onChange={(e) => setPublishForm({ ...publishForm, weddingTime: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">ĐỊA ĐIỂM</label>
+                    <input
+                      value={publishForm.venue}
+                      onChange={(e) => setPublishForm({ ...publishForm, venue: e.target.value })}
+                      placeholder="VD: Trung tâm Hội nghị Riverside..."
+                      className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleConfirmPublish}
+                  disabled={isPublishing}
+                  className="w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-4 text-sm font-bold text-white shadow-lg shadow-rose-500/30 transition-opacity hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {isPublishing && <Loader2 size={16} className="animate-spin" />}
+                  {isPublishing ? 'Đang xuất bản...' : 'Xác nhận Phát hành'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
