@@ -1,4 +1,3 @@
-import React from "react";
 import { RevolvingHeartsIcon } from "../../components/icons/emojione-revolving-hearts";
 
 interface LoadingPageProps {

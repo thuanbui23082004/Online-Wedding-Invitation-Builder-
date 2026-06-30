@@ -8,7 +8,7 @@ import { Button } from '../../components/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingBackgroundHearts from '../../components/FloatingBackgroundHearts';
 
-export const Templates: React.FC = () => {
+export const TemplatesPage: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
     const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +52,7 @@ export const Templates: React.FC = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="flex-1 max-w-[90rem] mx-auto w-full px-4 md:px-8 pt-32 pb-24 space-y-10 relative z-10"
+                className="flex-1 max-w-360 mx-auto w-full px-4 md:px-8 pt-32 pb-24 space-y-10 relative z-10"
             >
                 
                 {/* Header & Typography Section */}
@@ -128,7 +128,7 @@ export const Templates: React.FC = () => {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             transition={{ duration: 0.3 }}
-                                            className="bg-white rounded-[2rem] overflow-hidden border border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_35px_rgba(244,63,94,0.06)] hover:-translate-y-1 transition-all duration-500 group cursor-pointer flex flex-col"
+                                            className="bg-white rounded-4xl overflow-hidden border border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_15px_35px_rgba(244,63,94,0.06)] hover:-translate-y-1 transition-all duration-500 group cursor-pointer flex flex-col"
                                             onClick={() => handleOpenModal(item)}
                                         >
                                             <div className="relative aspect-[3/4.2] overflow-hidden bg-zinc-50">
@@ -218,4 +218,4 @@ export const Templates: React.FC = () => {
     );
 };
 
-export default Templates;
+export default TemplatesPage;

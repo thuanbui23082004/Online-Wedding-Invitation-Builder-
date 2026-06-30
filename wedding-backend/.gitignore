@@ -1,0 +1,57 @@
+# Compiled output
+/dist
+/build
+/out
+/.nest
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented code coverage downloads
+coverage
+.nyc_output
+
+# Eslint / Prettier cache
+.eslintcache
+.prettiercache
+
+# dotenv environment variable files (Crucial for database credentials)
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# SQLite/Prisma database file targets
+*.db
+*.db-journal

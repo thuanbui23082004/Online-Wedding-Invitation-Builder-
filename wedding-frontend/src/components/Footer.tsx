@@ -1,5 +1,4 @@
 // src/components/Footer.tsx
-import React from "react";
 import FacebookIcon from "./icons/FacebookIcon"; 
 import InstagramIcon from "../components/icons/InstagramIcon";
 import ThreadsSquareIcon from "../components/icons/ThreadsSquareIcon";
