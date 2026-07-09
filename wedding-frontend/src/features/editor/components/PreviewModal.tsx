@@ -219,91 +219,47 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
             </div>
           </div>
         ) : (
-          // Desktop view: Phone mockup
+          // Desktop view: Clean card container (no mockup)
           <div
+            ref={containerRef}
+            className="preview-scroll-container"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onTouchStart={() => setIsHovered(true)}
+            onTouchEnd={() => {
+              setTimeout(() => setIsHovered(false), 2000);
+            }}
             style={{
-              width: phoneFrameW,
-              height: phoneFrameH,
-              backgroundColor: '#000',
-              borderRadius: 36,
-              padding: 12,
+              width: PHONE_INNER_W,
+              height: PHONE_INNER_H,
+              backgroundColor: '#fff',
+              borderRadius: 32,
+              overflowY: 'auto',
+              overflowX: 'hidden',
               position: 'relative',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(0, 0, 0, 0.05)',
               transform: `scale(${phoneScale})`,
               transformOrigin: 'center center',
             }}
           >
-            {/* Notch */}
-            <div
-              style={{
+            <div ref={innerContainerRef} style={{
+              width: actualContainerWidth,
+              height: canvasHeight * scale,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: canvasWidth,
+                height: canvasHeight,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
                 position: 'absolute',
-                top: 12,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 120,
-                height: 24,
-                backgroundColor: '#000',
-                borderBottomLeftRadius: 16,
-                borderBottomRightRadius: 16,
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Screen */}
-            <div
-              ref={containerRef}
-              className="preview-scroll-container"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              onTouchStart={() => setIsHovered(true)}
-              onTouchEnd={() => {
-                setTimeout(() => setIsHovered(false), 2000);
-              }}
-              style={{
-                width: PHONE_INNER_W,
-                height: PHONE_INNER_H,
-                backgroundColor: '#fff',
-                borderRadius: 24,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                position: 'relative',
-              }}
-            >
-              <div ref={innerContainerRef} style={{
-                width: actualContainerWidth,
-                height: canvasHeight * scale,
-                position: 'relative',
+                top: 0,
+                left: 0,
               }}>
-                <div style={{
-                  width: canvasWidth,
-                  height: canvasHeight,
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                }}>
-                  <CardRenderer elements={elements} background={canvasBackground} canvasWidth={canvasWidth} />
-                </div>
+                <CardRenderer elements={elements} background={canvasBackground} canvasWidth={canvasWidth} />
               </div>
             </div>
-
-            {/* Home Indicator */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 18,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 100,
-                height: 4,
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                borderRadius: 4,
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            />
           </div>
         )}
 

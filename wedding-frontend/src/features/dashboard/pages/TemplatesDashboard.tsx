@@ -285,18 +285,12 @@ export const TemplatesDashboard = () => {
               {/* Left Side: Dynamic Mobile Mockup Preview Slider */}
               <div className="flex-1 bg-slate-50 flex items-center justify-center p-6 relative border-b md:border-b-0 md:border-r border-slate-100">
                 
-                {/* Smartphone Device Mockup container */}
-                <div className="relative w-full max-w-[270px] h-[55vh] min-h-[380px] bg-slate-950 rounded-[2.5rem] p-2.5 shadow-xl border-4 border-slate-800 flex flex-col overflow-hidden">
-                  {/* Notch */}
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-950 rounded-full z-35 flex items-center justify-center pointer-events-none">
-                    <div className="w-2 h-2 bg-slate-900 rounded-full mr-auto ml-3 opacity-50" />
-                    <div className="w-1 h-1 bg-slate-900 rounded-full ml-auto mr-3 opacity-50" />
-                  </div>
-                  
-                  {/* Smartphone screen viewport with custom hidden scrollbars */}
+                {/* Clean Card Viewport (no mockup device frame) */}
+                <div className="relative w-full max-w-[340px] h-[65vh] rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-xl flex flex-col">
+                  {/* Scrollable Viewport */}
                   <div 
                     ref={previewScrollRef}
-                    className="w-full h-full rounded-[1.85rem] overflow-y-auto overflow-x-hidden bg-white relative flex flex-col"
+                    className="w-full h-full overflow-y-auto overflow-x-hidden bg-white relative flex flex-col"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
                     <style>{`

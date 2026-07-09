@@ -438,6 +438,20 @@ export const Overview = () => {
       title: 'Lời chúc mới',
       desc: `${w.displayName || w.guestName || 'Ai đó'} gửi lời chúc: "${w.message}"`,
       time: new Date(w.createdAt || w.updatedAt),
+    })),
+    ...cards.map(c => ({
+      id: `card-${c.id}`,
+      type: 'card',
+      title: 'Khởi tạo thiệp mời',
+      desc: `Bạn đã tạo thiệp cưới mới: "${c.title}"`,
+      time: new Date(c.createdAt || c.updatedAt),
+    })),
+    ...assets.map(a => ({
+      id: `asset-${a.id}`,
+      type: 'asset',
+      title: 'Tải ảnh lên thư viện',
+      desc: `Bạn đã tải lên hình ảnh: "${a.fileName || 'ảnh mới'}"`,
+      time: new Date(a.createdAt || a.updatedAt),
     }))
   ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 5);
 
@@ -879,9 +893,19 @@ export const Overview = () => {
                 <div className="space-y-4 flex-1">
                   {activities.map((act) => (
                     <div key={act.id} className="flex items-start gap-3 border-b border-[rgb(255,237,199)] pb-3 last:border-0 last:pb-0">
-                      <div className={`p-2 rounded-xl shrink-0 ${act.type === 'rsvp' ? 'bg-[rgb(255,237,199)] text-[rgb(235,76,76)]' : 'bg-[rgb(255,237,199)] text-[rgb(255,112,112)]'
-                        }`}>
-                        {act.type === 'rsvp' ? <UserCheck size={15} /> : <MessageSquare size={15} />}
+                      <div className={`p-2 rounded-xl shrink-0 ${
+                        act.type === 'rsvp' 
+                          ? 'bg-[rgb(255,237,199)] text-[rgb(235,76,76)]' 
+                          : act.type === 'wish'
+                          ? 'bg-[rgb(255,237,199)] text-[rgb(255,112,112)]'
+                          : act.type === 'card'
+                          ? 'bg-purple-50 text-purple-600 border border-purple-100/50'
+                          : 'bg-blue-50 text-blue-600 border border-blue-100/50'
+                      }`}>
+                        {act.type === 'rsvp' && <UserCheck size={15} />}
+                        {act.type === 'wish' && <MessageSquare size={15} />}
+                        {act.type === 'card' && <Palette size={15} />}
+                        {act.type === 'asset' && <Image size={15} />}
                       </div>
                       <div className="flex-1 min-w-0 text-left">
                         <div className="flex items-center justify-between gap-2">

@@ -4,7 +4,6 @@ import { customerCardsData } from '../../data/customerCards';
 import { Mail, X } from 'lucide-react';
 import { RevolvingHeartsIcon } from '../../components/icons/emojione-revolving-hearts';
 import { motion } from 'framer-motion';
-import { ThreeDInvitation } from '../../components/ThreeDInvitation';
 
 export const InvitationShow: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -12,7 +11,6 @@ export const InvitationShow: React.FC = () => {
     const [heartCount, setHeartCount] = useState(128);
     const [wishVisible, setWishVisible] = useState(true);
     const [hearts, setHearts] = useState<{ id: number, x: number }[]>([]);
-    const [is3DOpen, setIs3DOpen] = useState(false);
 
     const handleShootHeart = () => {
         setHeartCount(prev => prev + 1);
@@ -28,6 +26,7 @@ export const InvitationShow: React.FC = () => {
 
     const card = customerCardsData.find(c => c.id === Number(id)) || customerCardsData[0];
 
+    // Generate dynamic names from the title if possible
     const getCursiveNames = () => {
         if (card.title.includes('&')) {
             const parts = card.title.split('&');
@@ -133,14 +132,6 @@ export const InvitationShow: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                            {/* 3D Invitation Toggle Button */}
-                            <button
-                                onClick={() => setIs3DOpen(true)}
-                                className="w-full bg-linear-to-r from-white-500 via-rose-100 to-whitr-600 hover:from-amber-200 hover:via-rose-650 hover:to-pink-700 text-white font-black text-[10px] sm:text-xs py-3 px-4 rounded-full shadow-lg hover:shadow-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10 uppercase tracking-widest font-poppins"
-                            >
-                                Trải nghiệm thiệp 3D
-                            </button>
-
                             <div className="flex gap-4 text-xs font-poppins text-white/90 drop-shadow-xs pl-2 font-medium">
                                 <span className="hover:text-rose-400 cursor-pointer">Nhà Trai</span>
                                 <span className="hover:text-rose-400 cursor-pointer">Nhà Gái</span>
@@ -149,15 +140,15 @@ export const InvitationShow: React.FC = () => {
                             <div className="flex items-center gap-2 relative">
                                 <button
                                     onClick={() => alert('Chức năng gửi lời chúc sẽ sớm ra mắt!')}
-                                    className="flex-1 bg-white-800/80 hover:bg-black backdrop-blur-xs text-white rounded-full py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 transition-all shadow-xs cursor-pointer"
+                                    className="flex-1 bg-zinc-800/80 hover:bg-zinc-800 backdrop-blur-xs text-white rounded-full py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 transition-all shadow-xs cursor-pointer"
                                 >
-                                    <Mail size={12} className="text-white-400" />
+                                    <Mail size={12} className="text-rose-400" />
                                     <span>Gửi lời chúc...</span>
                                 </button>
 
                                 <button
                                     onClick={handleShootHeart}
-                                    className="bg-white-500 hover:bg-rose-600 text-white rounded-full py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1 border border-rose-400/20 active:scale-95 transition-all shadow-md cursor-pointer"
+                                    className="bg-rose-500 hover:bg-rose-600 text-white rounded-full py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1 border border-rose-400/20 active:scale-95 transition-all shadow-md cursor-pointer"
                                 >
                                     <span>💖</span>
                                     <span>Bắn tim</span>
@@ -216,12 +207,8 @@ export const InvitationShow: React.FC = () => {
                     <span className="text-[10px] font-medium text-zinc-400 font-poppins">xem trên điện thoại</span>
                 </div>
             )}
-
-            {is3DOpen && (
-                <ThreeDInvitation card={card} onClose={() => setIs3DOpen(false)} />
-            )}
         </div>
     );
 };
 
-export default InvitationShow; //cái này thì preview chưa hoàn chỉnh
+export default InvitationShow; //cái này thì linh tinh thoi hahha
