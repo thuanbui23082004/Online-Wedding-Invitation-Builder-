@@ -124,11 +124,10 @@ export const MyCards = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
-                          isActive 
-                            ? 'bg-[rgb(235,76,76)] text-white shadow-md shadow-[rgb(235,76,76)]/20' 
-                            : 'text-slate-500 hover:bg-[rgb(255,237,199)]/20 hover:text-[rgb(235,76,76)]'
-                        }`}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${isActive
+                          ? 'bg-[rgb(235,76,76)] text-white shadow-md shadow-[rgb(235,76,76)]/20'
+                          : 'text-slate-500 hover:bg-[rgb(255,237,199)]/20 hover:text-[rgb(235,76,76)]'
+                          }`}
                       >
                         {page}
                       </button>
