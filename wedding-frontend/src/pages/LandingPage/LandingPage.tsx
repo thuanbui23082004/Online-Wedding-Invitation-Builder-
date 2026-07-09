@@ -16,6 +16,7 @@ import Image3 from '../../assets/images/3.png';
 import { templatesData, type TemplateItem } from '../../data/templates';
 import TemplateModal from '../../components/TemplateModal';
 import { Footer } from "../../components/Footer";
+import { templatesApi } from '../../api/templatesApi';
 import {
   ArrowRight,
   LayoutTemplate,
@@ -268,34 +269,7 @@ function FinalCTA() {
 
 
 
-const templatesRow1 = [
-  { src: WeddingImg1, alt: "Mẫu thiệp 1" },
-  { src: WeddingImg2, alt: "Mẫu thiệp 2" },
-  { src: WeddingImg3, alt: "Mẫu thiệp 3" },
-  { src: WeddingImg4, alt: "Mẫu thiệp 4" },
-  { src: WeddingImg5, alt: "Mẫu thiệp 5" },
-];
-const templatesRow2 = [
-  { src: WeddingImg6, alt: "Mẫu thiệp 6" },
-  { src: WeddingImg7, alt: "Mẫu thiệp 7" },
-  { src: WeddingImg8, alt: "Mẫu thiệp 8" },
-  { src: WeddingImg9, alt: "Mẫu thiệp 9" },
-  { src: WeddingImg10, alt: "Mẫu thiệp 10" },
-];
-const templatesRow3 = [
-  { src: WeddingImg1, alt: "Mẫu thiệp 1" },
-  { src: WeddingImg2, alt: "Mẫu thiệp 2" },
-  { src: WeddingImg3, alt: "Mẫu thiệp 3" },
-  { src: WeddingImg4, alt: "Mẫu thiệp 4" },
-  { src: WeddingImg5, alt: "Mẫu thiệp 5" },
-];
-const templatesRow4 = [
-  { src: WeddingImg6, alt: "Mẫu thiệp 6" },
-  { src: WeddingImg7, alt: "Mẫu thiệp 7" },
-  { src: WeddingImg8, alt: "Mẫu thiệp 8" },
-  { src: WeddingImg9, alt: "Mẫu thiệp 9" },
-  { src: WeddingImg10, alt: "Mẫu thiệp 10" },
-];
+// Static arrays kept as default backups
 
 // ─── Count-up hook ──────────────────────────────────────────────
 function useCountUp(target: number, duration = 1800) {
@@ -336,16 +310,39 @@ function useCountUp(target: number, duration = 1800) {
 }
 
 const LandingPage: React.FC = () => {
-
-  // const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [dbTemplates, setDbTemplates] = useState<any[]>([]);
 
-  const handleOpenModal = (item: TemplateItem) => {
-    setSelectedTemplate(item);
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const res = await templatesApi.getTemplates({ limit: 12 });
+        const items = Array.isArray(res) ? res : (res?.items || []);
+        setDbTemplates(items);
+      } catch (err) {
+        console.error('Error fetching templates for landing:', err);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  const handleOpenModal = (item: any) => {
+    const formattedItem: TemplateItem = {
+      id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : item.id,
+      title: item.name || item.title,
+      code: item.slug || item.code || 'DL-2026',
+      tag: item.category?.name || item.tag || 'WEDDING',
+      price: item.isPremium ? 'VIP' : 'Miễn phí',
+      mainImage: item.thumbnailUrl || item.mainImage,
+      detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage],
+      description: item.description || `Mẫu thiết kế thiệp cưới tuyệt đẹp phong cách hiện đại từ DearLove.`
+    };
+    setSelectedTemplate(formattedItem);
     setIsModalOpen(true);
   };
+
   const words = ["tân gia", "thôi nôi", "đám cưới", "lời chúc"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   useEffect(() => {
@@ -354,10 +351,42 @@ const LandingPage: React.FC = () => {
     }, 2500);
     return () => clearInterval(interval);
   }, []);
-  const galleryImages = [WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5, WeddingImg6];
+
+  const galleryImages = dbTemplates.length > 0
+    ? dbTemplates.map(t => t.thumbnailUrl).filter(Boolean)
+    : [WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5, WeddingImg6];
+
+  // Dynamic rows for Hero Section marquee scrolling
+  const dbRow1 = dbTemplates.length > 0 
+    ? dbTemplates.slice(0, 5).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
+    : [
+        { src: WeddingImg1, alt: "Mẫu thiệp 1" },
+        { src: WeddingImg2, alt: "Mẫu thiệp 2" },
+        { src: WeddingImg3, alt: "Mẫu thiệp 3" },
+        { src: WeddingImg4, alt: "Mẫu thiệp 4" },
+        { src: WeddingImg5, alt: "Mẫu thiệp 5" },
+      ];
+
+  const dbRow2 = dbTemplates.length > 5 
+    ? dbTemplates.slice(5, 10).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
+    : [
+        { src: WeddingImg6, alt: "Mẫu thiệp 6" },
+        { src: WeddingImg7, alt: "Mẫu thiệp 7" },
+        { src: WeddingImg8, alt: "Mẫu thiệp 8" },
+        { src: WeddingImg9, alt: "Mẫu thiệp 9" },
+        { src: WeddingImg10, alt: "Mẫu thiệp 10" },
+      ];
+
+  const templatesRow1 = dbRow1;
+  const templatesRow2 = dbRow2;
+  const templatesRow3 = dbRow1;
+  const templatesRow4 = dbRow2;
+
   // Nhân đôi mảng để tạo luồng chạy lặp vô tận không có điểm đứt
   const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
   const doubleImages = [...galleryImages, ...galleryImages];
+
+  const templatesToRender = dbTemplates.length > 0 ? dbTemplates : templatesData;
 
   // Mouse tracking for hero section
   const heroRef = React.useRef<HTMLDivElement>(null);
@@ -749,42 +778,54 @@ const LandingPage: React.FC = () => {
             className="relative group/carousel"
           >
             <div className="flex gap-6 overflow-x-auto pb-8 pt-4 snap-x no-scrollbar scroll-smooth">
-              {templatesData.map((item) => (
-                <div
-                  key={item.id}
-                  className="shrink-0 w-48 md:w-52 snap-start bg-white rounded-3xl overflow-hidden border border-zinc-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(244,63,94,0.08)] transition-all duration-500 group/card text-left"                  >
-                  <div className="relative aspect-3/4 overflow-hidden bg-zinc-50">
-                    <img
-                      src={item.mainImage}
-                      alt={item.title}
-                      className="w-full h-full object-cover object-top group-hover/card:object-bottom"
-                      style={{ transition: 'object-position 4s ease-in-out' }}
-                    />
+              {templatesToRender.map((item) => {
+                const imageSrc = item.thumbnailUrl || item.mainImage;
+                const titleText = item.name || item.title;
+                const categoryTag = item.category?.name || item.tag || 'WEDDING';
+                const codeText = item.slug || item.code || 'DL-2026';
+                return (
+                  <div
+                    key={item.id}
+                    className="shrink-0 w-48 md:w-52 snap-start bg-white rounded-3xl overflow-hidden border border-zinc-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(244,63,94,0.08)] transition-all duration-500 group/card text-left"                  >
+                    <div className="relative aspect-3/4 overflow-hidden bg-zinc-50">
+                      {imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={titleText}
+                          className="w-full h-full object-cover object-top group-hover/card:object-bottom"
+                          style={{ transition: 'object-position 4s ease-in-out' }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-rose-200 bg-rose-50/20">
+                          <Palette size={48} strokeWidth={1.5} />
+                        </div>
+                      )}
 
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-                      <Button
-                        onClick={() => handleOpenModal(item)}
-                        className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm px-6 py-2.5 shadow-md active:scale-95 transition-all"
-                      >
-                        Xem mẫu
-                      </Button>
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+                        <Button
+                          onClick={() => handleOpenModal(item)}
+                          className="rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm px-6 py-2.5 shadow-md active:scale-95 transition-all"
+                        >
+                          Xem mẫu
+                        </Button>
+                      </div>
+
+                      <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[10px] font-black tracking-widest text-zinc-800 px-3 py-1 rounded-full border border-zinc-100 shadow-sm uppercase">
+                        {categoryTag}
+                      </span>
                     </div>
 
-                    <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[10px] font-black tracking-widest text-zinc-800 px-3 py-1 rounded-full border border-zinc-100 shadow-sm uppercase">
-                      {item.tag}
-                    </span>
+                    <div className="p-5 space-y-1">
+                      <h4 className="font-bold text-zinc-800 text-base tracking-tight truncate group-hover/card:text-rose-600 transition-colors">
+                        {titleText}
+                      </h4>
+                      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                        Mã: {codeText}
+                      </p>
+                    </div>
                   </div>
-
-                  <div className="p-5 space-y-1">
-                    <h4 className="font-bold text-zinc-800 text-base tracking-tight truncate group-hover/card:text-rose-600 transition-colors">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                      Mã: {item.code}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <button

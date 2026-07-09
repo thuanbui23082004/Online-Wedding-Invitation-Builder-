@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from './DashboardLayout';
 // DashboardPanel removed for Overview to use full-width layout
-import { Crown, Sparkles, ArrowRight, Sparkle, ArrowUpRight, Navigation, Gift, Image, Wallet, Store, Headphones, PlayCircle, Settings, Mails, MessageSquare, UserCheck } from 'lucide-react';
+import { Crown, Sparkles, ArrowRight, Sparkle, ArrowUpRight, Navigation, Gift, Image, Wallet, Store, Headphones, PlayCircle, Settings, Mails, MessageSquare, UserCheck, Palette } from 'lucide-react';
 import FloatingBackgroundHearts from '../../../components/FloatingBackgroundHearts';
 import { useAuthStore } from '../../../store/authStore';
 import { useState, useEffect } from 'react';
@@ -12,6 +12,7 @@ import { templatesData } from '../../../data/templates';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { templatesApi } from '../../../api/templatesApi';
 
 import mockupImage from '../../../assets/images/mockup-thiep-cuoi-online-1.webp';
 // --- Custom Icon Components ---
@@ -314,11 +315,13 @@ const PersonSupport16FilledIcon = ({
 export const Overview = () => {
   const { user } = useAuthStore();
   const displayName = user?.fullName ? user.fullName.trim().split(/\s+/).pop() : 'bạn';
+  const navigate = useNavigate();
 
   const [cards, setCards] = useState<any[]>([]);
   const [assets, setAssets] = useState<any[]>([]);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [wishes, setWishes] = useState<any[]>([]);
+  const [suggestedTemplates, setSuggestedTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStatsAndData = async () => {
@@ -327,14 +330,36 @@ export const Overview = () => {
       const assetsRes = await assetsApi.getAssets();
       const rsvpsRes = await cardsApi.getAllRsvps();
       const wishesRes = await cardsApi.getAllWishes();
+      const templatesRes = await templatesApi.getTemplates({ limit: 3 });
+      
       setCards(cardsRes.data || cardsRes || []);
       setAssets(assetsRes || []);
       setRsvps(rsvpsRes.data || rsvpsRes || []);
       setWishes(wishesRes.data || wishesRes || []);
+      
+      const items = Array.isArray(templatesRes) ? templatesRes : (templatesRes?.items || []);
+      setSuggestedTemplates(items);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUseTemplate = async (templateId: string, templateName: string) => {
+    const loadingToast = toast.loading('Đang khởi tạo thiệp cưới của bạn...');
+    try {
+      const card = await cardsApi.createCard({
+        title: `Thiệp cưới - ${templateName}`,
+        templateId: templateId
+      });
+      toast.dismiss(loadingToast);
+      toast.success('Tạo thiệp cưới từ mẫu thành công!');
+      navigate(`/loading?next=${encodeURIComponent(`/design?id=${card.id}`)}&message=${encodeURIComponent('Đang mở trình thiết kế...')}`);
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      console.error('Error creating card from template:', err);
+      toast.error(err.response?.data?.message || 'Không thể khởi tạo thiệp mời từ mẫu này.');
     }
   };
 
@@ -365,7 +390,7 @@ export const Overview = () => {
   };
 
   const imageAssetsCount = assets.filter(asset => asset.type === 'image').length;
-  const activeCardsCount = cards.filter(card => card.status === 'published').length;
+  const activeCardsCount = cards.length;
   const totalViews = cards.reduce((sum, card) => sum + (card.viewCount || 0), 0);
 
   const photoPercent = Math.min(100, Math.round((imageAssetsCount / limits.photos) * 100)) || 0;
@@ -415,8 +440,6 @@ export const Overview = () => {
       time: new Date(w.createdAt || w.updatedAt),
     }))
   ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 5);
-
-  const suggestedTemplates = templatesData.filter(t => t.tag === 'WEDDING').slice(0, 3);
 
   // SVG dash offset values based on 138 circumference (2 * PI * 22)
   const photoOffset = 138 - (138 * photoPercent) / 100;
@@ -802,28 +825,37 @@ export const Overview = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                 {suggestedTemplates.map((item) => (
-                  <Link
+                  <div
                     key={item.id}
-                    to={`/loading?next=${encodeURIComponent(`/design?templateId=${item.id}`)}&message=${encodeURIComponent('Đang mở trình thiết kế...')}`}
-                    className="bg-white rounded-2xl overflow-hidden border border-[rgb(255,166,166)]/20 hover:border-[rgb(255,112,112)] shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col hover:no-underline"
+                    onClick={() => handleUseTemplate(item.id, item.name)}
+                    className="bg-white rounded-2xl overflow-hidden border border-[rgb(255,166,166)]/20 hover:border-[rgb(255,112,112)] shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 group flex flex-col hover:no-underline cursor-pointer"
                   >
-                    <div className="relative aspect-[3/4.2] overflow-hidden bg-[rgb(255,237,199)]/20 border-b border-[rgb(255,237,199)]">
-                      <img
-                        src={item.mainImage}
-                        alt={item.title}
-                        className="w-full h-full object-cover object-top transition-all"
-                      />
-                      <span className="absolute top-2.5 left-2.5 bg-white/95 text-[9px] font-black tracking-widest text-[rgb(235,76,76)] px-2 py-0.5 rounded-full border border-[rgb(255,237,199)] uppercase">
-                        {item.price}
-                      </span>
+                    <div className="relative aspect-[3/4.2] overflow-hidden bg-slate-50 border-b border-slate-100">
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover object-top group-hover:object-bottom"
+                          style={{ transition: 'object-position 4s ease-in-out' }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-rose-250 bg-rose-50/10">
+                          <Palette size={32} strokeWidth={1.5} />
+                        </div>
+                      )}
+                      {item.isPremium && (
+                        <span className="absolute top-2.5 left-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white font-black text-[8px] px-2 py-0.5 rounded-full border border-amber-300 uppercase shadow-sm">
+                          VIP
+                        </span>
+                      )}
                     </div>
-                    <div className="p-3 flex-1 flex flex-col justify-between">
-                      <h4 className="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-[rgb(255,112,112)] transition-colors" title={item.title}>
-                        {item.title}
+                    <div className="p-3 flex-1 flex flex-col justify-between text-left">
+                      <h4 className="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-[rgb(255,112,112)] transition-colors" title={item.name}>
+                        {item.name}
                       </h4>
-                      <span className="text-[10px] text-zinc-400 font-bold mt-1">Mã: {item.code}</span>
+                      <span className="text-[10px] text-zinc-400 font-bold mt-1">Lượt dùng: {item.useCount || 0}</span>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>

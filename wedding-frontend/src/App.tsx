@@ -30,6 +30,7 @@ import { AccountProfile } from './features/dashboard/pages/AccountProfile';
 import { MyPlan } from './features/dashboard/pages/MyPlan';
 import { PaymentQR } from './features/dashboard/pages/Paymentqr';
 import { Feedback } from './features/dashboard/pages/Feedback';
+import { TemplatesDashboard } from './features/dashboard/pages/TemplatesDashboard';
 
 // Admin
 import { AdminLayout } from './features/admin/layout/AdminLayout';
@@ -81,7 +82,7 @@ function App() {
           <Route path="/dashboard/my-cards" element={<MyCardsDashboard />} />
           <Route path="/dashboard/create" element={<CreateCard />} />
           <Route path="/dashboard/cards/:id" element={<CardDetailPage />} />
-          <Route path="/dashboard/templates" element={<Templates />} />
+          <Route path="/dashboard/templates" element={<TemplatesDashboard />} />
           <Route path="/dashboard/wishes" element={<Wishes />} />
           <Route path="/dashboard/rsvp" element={<RSVP />} />
           <Route path="/dashboard/gifts" element={<ReceivedGifts />} />

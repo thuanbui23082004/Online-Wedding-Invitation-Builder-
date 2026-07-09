@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Footer from '../../components/Footer';
 import { templatesData, type TemplateItem } from '../../data/templates';
 import TemplateModal from '../../components/TemplateModal';
@@ -8,12 +8,37 @@ import { Button } from '../../components/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingBackgroundHearts from '../../components/FloatingBackgroundHearts';
 import { Header } from '../../components/Header';
+import { templatesApi } from '../../api/templatesApi';
+import { cardsApi } from '../../api/cardsApi';
+import { useAuthStore } from '../../store/authStore';
+import { toast } from 'sonner';
 
 export const Templates: React.FC = () => {
+    const navigate = useNavigate();
+    const { user } = useAuthStore();
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
     const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [favorites, setFavorites] = useState<number[]>([]);
+    const [dbTemplates, setDbTemplates] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchTemplates = async () => {
+        setIsLoading(true);
+        try {
+            const res = await templatesApi.getTemplates();
+            const items = Array.isArray(res) ? res : (res?.items || []);
+            setDbTemplates(items);
+        } catch (err) {
+            console.error('Error fetching templates:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTemplates();
+    }, []);
 
     const categories = [
         { key: 'ALL', name: 'Tất cả' },
@@ -34,13 +59,49 @@ export const Templates: React.FC = () => {
         );
     };
 
-    const handleOpenModal = (item: TemplateItem) => {
-        setSelectedTemplate(item);
+    const handleOpenModal = (item: any) => {
+        const formattedItem: TemplateItem = {
+            id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : item.id,
+            title: item.name || item.title,
+            code: item.slug || item.code || 'DL-2026',
+            tag: item.category?.name || item.tag || 'WEDDING',
+            price: item.isPremium ? 'VIP' : 'Miễn phí',
+            mainImage: item.thumbnailUrl || item.mainImage,
+            detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage],
+            description: item.description || `Mẫu thiết kế thiệp cưới tuyệt đẹp phong cách hiện đại từ DearLove.`
+        };
+        setSelectedTemplate(formattedItem);
         setIsModalOpen(true);
     };
 
-    const filteredTemplates = templatesData.filter(template => {
-        return selectedCategory === 'ALL' || template.tag === selectedCategory;
+    const handleUseTemplate = async (templateId: string, templateName: string) => {
+        if (!user) {
+            toast.error('Vui lòng đăng nhập để bắt đầu tự tạo thiệp cưới!');
+            navigate('/login');
+            return;
+        }
+        const loadingToast = toast.loading('Đang khởi tạo thiệp cưới của bạn...');
+        try {
+            const card = await cardsApi.createCard({
+                title: `Thiệp cưới - ${templateName}`,
+                templateId: templateId
+            });
+            toast.dismiss(loadingToast);
+            toast.success('Tạo thiệp cưới từ mẫu thành công!');
+            navigate(`/loading?next=${encodeURIComponent(`/design?id=${card.id}`)}&message=${encodeURIComponent('Đang mở trình thiết kế...')}`);
+        } catch (err: any) {
+            toast.dismiss(loadingToast);
+            console.error('Error creating card:', err);
+            toast.error(err.response?.data?.message || 'Không thể tạo thiệp mời từ mẫu này.');
+        }
+    };
+
+    const templatesToRender = dbTemplates.length > 0 ? dbTemplates : templatesData;
+
+    const filteredTemplates = templatesToRender.filter(template => {
+        if (selectedCategory === 'ALL') return true;
+        const tag = (template.tag || template.category?.slug || '').toUpperCase();
+        return tag.includes(selectedCategory) || selectedCategory.includes(tag);
     });
 
     return (
@@ -119,7 +180,15 @@ export const Templates: React.FC = () => {
                                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"
                             >
                                 {filteredTemplates.map((item) => {
-                                    const isFav = favorites.includes(item.id);
+                                    const idNum = typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : item.id;
+                                    const isFav = favorites.includes(idNum);
+                                    
+                                    const imageSrc = item.thumbnailUrl || item.mainImage;
+                                    const titleText = item.name || item.title;
+                                    const categoryTag = item.category?.name || item.tag || 'WEDDING';
+                                    const codeText = item.slug || item.code || 'DL-2026';
+                                    const priceText = item.isPremium ? 'VIP' : 'Miễn phí';
+
                                     return (
                                         <motion.div
                                             key={item.id}
@@ -132,19 +201,25 @@ export const Templates: React.FC = () => {
                                             onClick={() => handleOpenModal(item)}
                                         >
                                             <div className="relative aspect-[3/4.2] overflow-hidden bg-zinc-50">
-                                                <img
-                                                    src={item.mainImage}
-                                                    alt={item.title}
-                                                    className="w-full h-full object-cover object-top group-hover:object-bottom"
-                                                    style={{ transition: 'object-position 4s ease-in-out' }}
-                                                />
+                                                {imageSrc ? (
+                                                    <img
+                                                        src={imageSrc}
+                                                        alt={titleText}
+                                                        className="w-full h-full object-cover object-top group-hover:object-bottom"
+                                                        style={{ transition: 'object-position 4s ease-in-out' }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-rose-200 bg-rose-50/20">
+                                                        <Palette size={48} strokeWidth={1.5} />
+                                                    </div>
+                                                )}
  
                                                 <span className="absolute top-4 left-4 bg-white/95 backdrop-blur-xs text-[9px] font-black tracking-widest text-zinc-800 px-3 py-1 rounded-full border border-zinc-100 shadow-xs uppercase font-poppins">
-                                                    {categories.find(c => c.key === item.tag)?.name || item.tag}
+                                                    {categoryTag}
                                                 </span>
  
                                                 <button
-                                                    onClick={(e) => toggleFavorite(item.id, e)}
+                                                    onClick={(e) => toggleFavorite(idNum, e)}
                                                     className={`absolute top-4 right-4 p-2 rounded-full backdrop-blur-xs transition-all duration-300 border shadow-xs ${isFav
                                                         ? 'bg-[rgb(255,237,199)] border-[rgb(255,166,166)]/45 text-[rgb(235,76,76)] hover:bg-[rgb(255,166,166)]/30'
                                                         : 'bg-white/90 border-zinc-100 text-zinc-400 hover:text-[rgb(235,76,76)] hover:bg-white'
@@ -167,7 +242,7 @@ export const Templates: React.FC = () => {
                                                         <Button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                alert(`Bắt đầu tạo thiệp với mẫu ${item.code}`);
+                                                                handleUseTemplate(item.id, titleText);
                                                             }}
                                                             className="w-full rounded-full bg-[rgb(235,76,76)] hover:bg-[rgb(255,112,112)] text-white font-bold text-xs py-2.5 shadow-md flex items-center justify-center gap-1.5 transition-transform active:scale-95 duration-200"
                                                         >
@@ -179,11 +254,11 @@ export const Templates: React.FC = () => {
  
                                             <div className="p-4 space-y-1 text-left">
                                                 <div className="flex justify-between items-center text-[10px] font-bold text-zinc-400 uppercase tracking-wider font-poppins">
-                                                    <span>Mã: {item.code}</span>
-                                                    <span className="text-[rgb(235,76,76)] bg-[rgb(255,237,199)] px-2 py-0.5 rounded-md lowercase">{item.price}</span>
+                                                    <span>Mã: {codeText}</span>
+                                                    <span className="text-[rgb(235,76,76)] bg-[rgb(255,237,199)] px-2 py-0.5 rounded-md lowercase">{priceText}</span>
                                                 </div>
                                                 <h3 className="font-bold text-zinc-800 text-sm tracking-tight leading-snug truncate group-hover:text-[rgb(235,76,76)] transition-colors duration-300">
-                                                    {item.title}
+                                                    {titleText}
                                                 </h3>
                                             </div>
                                         </motion.div>
