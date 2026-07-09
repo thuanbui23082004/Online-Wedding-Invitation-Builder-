@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: space-between;
   height: var(--ed-header-h);
-  background: #f43f5e;
+  background: var(--ed-accent);
   padding: 0 24px;
   flex-shrink: 0;
   z-index: 100;

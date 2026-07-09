@@ -786,8 +786,8 @@
   }
 
   .mobile-prop-btn.active {
-    color: #f43f5e;
-    background: #fff1f2;
+    color: var(--ed-accent);
+    background: var(--ed-bg-hover);
   }
 
   .mobile-prop-btn svg {
@@ -820,8 +820,8 @@
   .lt-effects-panel,
   .bg-panel,
   .music-panel,
-  .library-panel,
-  .template-panel {
+  .lib-panel,
+  .lt-template-panel {
     position: fixed !important;
     left: 0 !important;
     right: 0 !important;
@@ -829,12 +829,12 @@
     top: auto !important;
     width: 100% !important;
     height: 55vh !important;
-    border-radius: 20px 20px 0 0;
-    border-right: none;
-    border-top: 1px solid var(--ed-border);
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
-    z-index: 600;
-    animation: lt-sheet-slide-up 0.25s cubic-bezier(0.22,1,0.36,1);
+    border-radius: 20px 20px 0 0 !important;
+    border-right: none !important;
+    border-top: 1px solid var(--ed-border) !important;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18) !important;
+    z-index: 600 !important;
+    animation: lt-sheet-slide-up 0.25s cubic-bezier(0.22,1,0.36,1) !important;
   }
 
   /* panels that render absolutely next to toolbar */
@@ -845,12 +845,12 @@
     bottom: 64px !important;
     top: auto !important;
     width: 100% !important;
-    max-height: 55vh;
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
-    z-index: 600;
-    overflow-y: auto;
-    animation: lt-sheet-slide-up 0.25s cubic-bezier(0.22,1,0.36,1);
+    max-height: 55vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18) !important;
+    z-index: 600 !important;
+    overflow-y: auto !important;
+    animation: lt-sheet-slide-up 0.25s cubic-bezier(0.22,1,0.36,1) !important;
   }
 
   @keyframes lt-sheet-slide-up {

@@ -37,7 +37,8 @@ import {
   AlignStartHorizontal,
   AlignEndHorizontal,
   Lock,
-  Unlock
+  Unlock,
+  ChevronRight
 } from 'lucide-react';
 import type { CanvasElement } from '../types/editor.types';
 
@@ -377,7 +378,7 @@ export function ArrangeSection({ element }: { element: CanvasElement }) {
 }
 
 // ── Main Right Panel ───────────────────────────────────────
-export function RightPanel() {
+export function RightPanel({ onCollapse }: { onCollapse?: () => void }) {
   const { activeRightTab, setActiveRightTab, selectedElement, activeTool } = useEditorStore();
 
   const renderSettingsContent = () => {
@@ -455,21 +456,45 @@ export function RightPanel() {
   return (
     <aside className="editor-right-panel" aria-label="Thuộc tính">
       {/* Tabs */}
-      <div className="right-panel-tabs">
-        <button
-          id="tab-settings"
-          className={`right-panel-tab ${activeRightTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveRightTab('settings')}
-        >
-          <SlidersHorizontal size={16} /> Cài đặt
-        </button>
-        <button
-          id="tab-effects"
-          className={`right-panel-tab ${activeRightTab === 'effects' ? 'active' : ''}`}
-          onClick={() => setActiveRightTab('effects')}
-        >
-          <Wand2 size={16} /> Hiệu ứng
-        </button>
+      <div className="right-panel-tabs" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flex: 1 }}>
+          <button
+            id="tab-settings"
+            className={`right-panel-tab ${activeRightTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveRightTab('settings')}
+          >
+            <SlidersHorizontal size={16} /> Cài đặt
+          </button>
+          <button
+            id="tab-effects"
+            className={`right-panel-tab ${activeRightTab === 'effects' ? 'active' : ''}`}
+            onClick={() => setActiveRightTab('effects')}
+          >
+            <Wand2 size={16} /> Hiệu ứng
+          </button>
+        </div>
+        
+        {onCollapse && (
+          <button
+            className="right-panel-collapse-btn"
+            onClick={onCollapse}
+            title="Thu gọn bảng"
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '0 12px',
+              height: '100%',
+              color: '#64748b',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              alignSelf: 'stretch',
+            }}
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
       </div>
 
       {/* Content */}

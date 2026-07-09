@@ -179,7 +179,7 @@ export function CardItem({ card, onDelete }: CardItemProps) {
       <div className="px-4 pb-4 mt-auto">
         <button
           onClick={() => navigate(`/dashboard/cards/${card.id}`)}
-          className="w-full flex items-center justify-center gap-1.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[13px] font-bold transition-all shadow-sm shadow-rose-500/20 active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-1.5 py-2 bg-[rgb(235,76,76)] hover:bg-rose-700 text-white rounded-lg text-[13px] font-bold transition-all shadow-sm shadow-rose-500/20 active:scale-[0.98]"
         >
           <BarChart2 size={14} />
           Xem chi tiết

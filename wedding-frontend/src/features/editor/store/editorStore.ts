@@ -401,12 +401,14 @@ const INITIAL_STATE: EditorState = {
   canvasHeight: 2000,
   cropElementId: null,
   aiModalState: null,
-  filmstripItems: Array.from({ length: 14 }, (_, i) => ({
-    id: `page-${i + 1}`,
-    thumbnail: '',
-    label: `Trang ${i + 1}`,
-    isActive: i === 0,
-  })),
+  filmstripItems: [
+    {
+      id: 'page-1',
+      thumbnail: '',
+      label: 'Trang 1',
+      isActive: true,
+    }
+  ],
   aiColors: [
     { id: 'c1', hex: '#8B1A1A', label: 'Deep Red' },
     { id: 'c2', hex: '#C0392B', label: 'Crimson' },
@@ -1386,7 +1388,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         
         // Cập nhật URL trên trình duyệt để thêm ?id=...
         const url = new URL(window.location.href);
-        url.searchParams.set('id', currentCardId);
+        url.searchParams.set('id', currentCardId!);
         window.history.replaceState({}, '', url.toString());
       } catch (err) {
         console.error('[saveCanvasNow] Create new card failed:', err);
@@ -1448,7 +1450,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         autoScrollSpeed: get().autoScrollSpeed,
       };
 
-      await cardsApi.saveCanvas(currentCardId, {
+      await cardsApi.saveCanvas(currentCardId!, {
         blocks,
         background: canvasBackground as object,
         settings,
@@ -1471,7 +1473,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
               canvas.toBlob((b) => resolve(b), 'image/webp', 0.8);
             });
             if (blob) {
-              await cardsApi.uploadCardThumbnail(currentCardId, blob);
+              await cardsApi.uploadCardThumbnail(currentCardId!, blob);
             }
           }
         } catch (thumbErr) {

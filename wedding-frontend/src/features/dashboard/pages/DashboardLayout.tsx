@@ -18,6 +18,20 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    // Run once to initialize correctly on mount
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (user && user.role === 'admin') {
     return <Navigate to="/admin" replace />;
   }
@@ -66,20 +80,17 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
   const SidebarContent = () => (
     <>
       {/* Logo + Close */}
-      <div className="flex items-center justify-between px-5 h-16 shrink-0 border-b border-slate-200">
-        <Link to="/dashboard/overview" className="flex items-center gap-2.5 group cursor-pointer no-underline" onClick={closeSidebar}>
-          <div className="bg-rose-100 rounded-2xl w-10 h-10 flex items-center justify-center transition-transform group-hover:rotate-12">
-            <RevolvingHeartsIcon size={28} color="#f43f5e" />
+      <div className="flex items-center justify-between px-5 h-16 shrink-0 border-b border-[rgb(255,166,166)]/30">
+        <Link to="/dashboard/overview" className="flex items-center gap-2 group cursor-pointer no-underline" onClick={closeSidebar}>
+          <div className="bg-[rgb(253,205,209)] p-1.5 rounded-lg transition-transform group-hover:rotate-12 flex items-center justify-center border border-[rgb(255,166,166)]/30">
+            <RevolvingHeartsIcon size={20} color="#f43f5e" />
           </div>
-          <div>
-            <span className="text-[18px] font-extrabold text-slate-800 tracking-[-0.4px] block leading-tight">DearLove</span>
-            <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-[0.8px] block -mt-0.5">User Panel</span>
-          </div>
+          <span className="text-lg font-serif font-black text-[rgb(235, 76, 76)] tracking-tight">DearLove</span>
         </Link>
 
         <button
           onClick={closeSidebar}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center"
+          className="p-1.5 rounded-lg text-zinc-400 hover:text-[rgb(235, 76, 76)] hover:bg-[rgb(255,237,199)]/45 border border-transparent hover:border-[rgb(255,166,166)]/30 transition-all cursor-pointer flex items-center justify-center"
           title="Thu gọn menu"
         >
           <ChevronLeft size={18} />
@@ -87,10 +98,10 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto custom-scrollbar-mini">
+      <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto custom-scrollbar-mini">
         {menuGroups.map((group, idx) => (
           <div key={idx} className="space-y-2">
-            <h3 className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-[1px] mb-2">{group.title}</h3>
+            <h3 className="px-3 text-[10px] font-black text-[rgb(255,112,112)] uppercase tracking-wider">{group.title}</h3>
             <div className="space-y-1">
               {group.items.map((item, itemIdx) => {
                 const Icon = item.icon;
@@ -100,14 +111,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
                     key={itemIdx}
                     to={item.path}
                     onClick={closeSidebar}
-                    className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-[10px] transition-all duration-200 text-sm ${isActive
-                      ? 'bg-rose-50 text-rose-500 font-semibold'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold border ${isActive
+                      ? 'bg-rose-50 border-[rgb(255,166,166)]/40 text-rose-500 shadow-2xs'
+                      : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
                       }`}
                   >
-                    <span className={isActive ? 'text-rose-500' : 'text-slate-400 transition-colors group-hover:text-slate-600'}>
-                      <Icon size={18} />
-                    </span>
+                    <Icon size={17} />
                     {item.name}
                   </Link>
                 );
@@ -148,7 +157,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
         </div>
         <button
           onClick={handleLogout}
-          className="w-full mt-3 flex items-center gap-3 px-3.5 py-3 rounded-[10px] transition-all duration-200 text-sm font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+          className="w-full mt-3 flex items-center gap-3 px-4 py-2.5 rounded-full transition-all duration-200 text-xs font-bold text-zinc-500 hover:bg-[rgb(255,237,199)]/30 hover:text-[rgb(235,76,76)] border border-transparent hover:border-[rgb(255,166,166)]/30 cursor-pointer"
         >
           <LogOut size={17} />
           Đăng xuất
@@ -159,12 +168,12 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
 
   return (
 
-    <div className="flex h-screen bg-slate-50/50 font-inter text-zinc-800 select-none overflow-hidden">
+    <div className="flex h-screen bg-linear-to-br from-rose-100/60 via-white/60 to-amber-100/60 font-poppins text-zinc-800 select-none overflow-hidden">
 
       {/* ── DESKTOP SIDEBAR (md+) ─────────────────────────────── */}
       <aside
-        className={`hidden md:flex bg-white border-r border-slate-100 flex-col h-full transition-all duration-300 ease-in-out shrink-0 z-30 ${isSidebarOpen ? 'md:w-64' : 'md:w-0 md:opacity-0 md:-translate-x-full md:overflow-hidden md:pointer-events-none'}`}
-        style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+        className={`hidden md:flex bg-white/45 backdrop-blur-xl border border-[rgb(255,166,166)]/30 flex flex-col h-[calc(100vh-2rem)] shadow-lg transition-all duration-300 ease-in-out shrink-0 z-[999] my-4 ml-8 rounded-[2.25rem] ${isSidebarOpen ? 'w-56 opacity-100' : 'w-0 opacity-0 -translate-x-full overflow-hidden pointer-events-none ml-0 my-0 border-none'}`}
+        style={{ fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}
       >
         <SidebarContent />
       </aside>
@@ -178,8 +187,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
         />
         {/* Sidebar panel */}
         <aside
-          className={`relative w-[80vw] max-w-sm bg-white flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-          style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+          className={`relative w-[80vw] max-w-sm bg-white/95 backdrop-blur-xl border-r border-[rgb(255,166,166)]/30 flex flex-col h-full shadow-2xl transition-transform duration-300 ease-out rounded-r-[2.25rem] ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          style={{ fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}
         >
           <SidebarContent />
         </aside>
@@ -189,7 +198,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
       <main className="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
 
         {/* Header Desktop */}
-        <header className="hidden md:flex h-14 md:h-16 bg-gradient-to-r from-rose-50/70 via-rose-50/40 to-amber-50/70 backdrop-blur-md border-b border-rose-100/60 items-center justify-between px-4 md:px-6 shrink-0 z-10">
+        <header className="hidden md:flex h-14 md:h-16 bg-transparent backdrop-blur-md border-b border-white/5 items-center justify-between px-4 md:px-6 shrink-0 z-10 shadow-none">
           <div className="flex items-center gap-2 md:gap-3 min-w-0">
             {/* Hamburger / logo toggle */}
             {!isSidebarOpen && (
@@ -211,7 +220,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
           </div>
 
           {/* Header Right: Megaphone status & Actions */}
-          <div className="flex items-center gap-4">
+          <div className="  flex items-center gap-4 ">
             <div className="hidden lg:flex items-center gap-2 bg-[rgb(255,237,199)]/40 border border-[rgb(255,166,166)]/30 text-[rgb(235,76,76)] px-4 py-1.5 rounded-full text-[10px] font-bold shadow-2xs">
               <Megaphone size={12} className="animate-bounce" />
               <span>Hệ thống tạo thiệp di động đang hoạt động tối ưu!</span>

@@ -10,30 +10,30 @@
   --ed-bg-base: #f0f0f0;
   --ed-bg-panel: #ffffff;
   --ed-bg-panel-alt: #fafafa;
-  --ed-bg-hover: #fff1f2;
-  --ed-bg-active: #ffe4e6;
+  --ed-bg-hover: #fdf2f2;
+  --ed-bg-active: #fde8e8;
   --ed-bg-header: #1a1a2e;
   --ed-bg-toolbar: #ffffff;
   --ed-bg-canvas: #e8e8e8;
 
   --ed-border: #e5e5ea;
   --ed-border-strong: #d1d1d6;
-  --ed-border-focus: #f43f5e;
+  --ed-border-focus: #eb4c4c;
 
   --ed-text-primary: #1a1a2e;
   --ed-text-secondary: #6b7280;
   --ed-text-muted: #9ca3af;
   --ed-text-inverse: #ffffff;
 
-  --ed-accent: #f43f5e;
-  --ed-accent-light: #ffe4e6;
-  --ed-accent-hover: #e11d48;
+  --ed-accent: #eb4c4c;
+  --ed-accent-light: #fde8e8;
+  --ed-accent-hover: #d93838;
 
   --ed-success: #10b981;
   --ed-warning: #f59e0b;
   --ed-danger: #ef4444;
-  --ed-publish: #e11d48;
-  --ed-publish-hover: #be123c;
+  --ed-publish: #eb4c4c;
+  --ed-publish-hover: #d93838;
 
   /* Spacing */
   --ed-radius-sm: 4px;

@@ -206,81 +206,83 @@ function ImageUploadPanel({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      {/* Upload zone */}
-      <div
-        className={`lt-upload-zone ${isDraggingOver ? 'dragging' : ''}`}
-        onClick={() => fileInputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
-        onDragLeave={() => setIsDraggingOver(false)}
-        onDrop={handleDrop}
-      >
-        <div className="lt-upload-icon"><UploadIcon /></div>
-        <p className="lt-upload-text">Kéo thả hoặc nhấn vào đây để tải lên. Có thể tải lên nhiều lần cùng một lúc.</p>
-        <div className="lt-upload-meta">
-          {isUploading ? 'Đang tải lên...' : 'Hỗ trợ JPG, PNG, WEBP, GIF'}
-        </div>
-        <button className="lt-upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} disabled={isUploading}>
-          {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh'}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          style={{ display: 'none' }}
-          onChange={handleFileSelect}
-        />
-      </div>
-
-      {/* Folder row */}
-      <div className="lt-folder-row">
-        <span className="lt-folder-label">Thư mục</span>
-        <button className="lt-add-folder-btn">Thêm thư mục</button>
-      </div>
-
-      {/* Uploaded list */}
-      {uploadedImages.length > 0 ? (
-        <div className="lt-uploaded-section">
-          <div className="lt-uploaded-header">
-            <span>Ảnh đã tải lên</span>
-            <span className="lt-uploaded-meta">Tổng 1 tập / {uploadedImages.length} ảnh</span>
+      <div className="lt-image-panel-scrollable">
+        {/* Upload zone */}
+        <div
+          className={`lt-upload-zone ${isDraggingOver ? 'dragging' : ''}`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+          onDragLeave={() => setIsDraggingOver(false)}
+          onDrop={handleDrop}
+        >
+          <div className="lt-upload-icon"><UploadIcon /></div>
+          <p className="lt-upload-text">Kéo thả hoặc nhấn vào đây để tải lên. Có thể tải lên nhiều lần cùng một lúc.</p>
+          <div className="lt-upload-meta">
+            {isUploading ? 'Đang tải lên...' : 'Hỗ trợ JPG, PNG, WEBP, GIF'}
           </div>
-          <div className="lt-image-grid">
-            {uploadedImages.map((img) => (
-              <div
-                key={img.id}
-                className="lt-image-thumb-wrap"
-                title={img.name}
-                draggable={true}
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', img.src);
-                  e.dataTransfer.setData('image-name', img.name);
-                  e.dataTransfer.effectAllowed = 'copy';
-                }}
-              >
-                <img
-                  src={img.thumbnailSrc ?? img.src}
-                  alt={img.name}
-                  className="lt-image-thumb"
-                  onClick={() => addImageElement(img.src, img.name)}
-                  draggable={false}
-                />
-                <button
-                  className="lt-image-thumb-delete"
-                  title="Xóa ảnh"
-                  onClick={(e) => { e.stopPropagation(); handleDelete(img.id); }}
+          <button className="lt-upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} disabled={isUploading}>
+            {isUploading ? 'Đang xử lý...' : 'Tải lên Ảnh'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
+        </div>
+
+        {/* Folder row */}
+        <div className="lt-folder-row">
+          <span className="lt-folder-label">Thư mục</span>
+          <button className="lt-add-folder-btn">Thêm thư mục</button>
+        </div>
+
+        {/* Uploaded list */}
+        {uploadedImages.length > 0 ? (
+          <div className="lt-uploaded-section">
+            <div className="lt-uploaded-header">
+              <span>Ảnh đã tải lên</span>
+              <span className="lt-uploaded-meta">Tổng 1 tập / {uploadedImages.length} ảnh</span>
+            </div>
+            <div className="lt-image-grid">
+              {uploadedImages.map((img) => (
+                <div
+                  key={img.id}
+                  className="lt-image-thumb-wrap"
+                  title={img.name}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', img.src);
+                    e.dataTransfer.setData('image-name', img.name);
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
                 >
-                  <TrashSmIcon />
-                </button>
-              </div>
-            ))}
+                  <img
+                    src={img.thumbnailSrc ?? img.src}
+                    alt={img.name}
+                    className="lt-image-thumb"
+                    onClick={() => addImageElement(img.src, img.name)}
+                    draggable={false}
+                  />
+                  <button
+                    className="lt-image-thumb-delete"
+                    title="Xóa ảnh"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(img.id); }}
+                  >
+                    <TrashSmIcon />
+                  </button>
+                </div>
+              ))}
 
+            </div>
+            <p className="lt-uploaded-hint">Đã hiển thị tất cả ảnh.</p>
           </div>
-          <p className="lt-uploaded-hint">Đã hiển thị tất cả ảnh.</p>
-        </div>
-      ) : (
-        <p className="lt-uploaded-hint" style={{ marginTop: 16 }}>Đã hiển thị tất cả ảnh.</p>
-      )}
+        ) : (
+          <p className="lt-uploaded-hint" style={{ marginTop: 16 }}>Đã hiển thị tất cả ảnh.</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -778,15 +780,17 @@ export function LeftToolbar() {
           <MobileBottomSheet
             isOpen={mobilePropSheet === 'widget-props'}
             onClose={() => setMobilePropSheet(null)}
-            title={{
-              'countdown': 'Cài đặt Đếm ngược',
-              'map': 'Cài đặt Bản đồ',
-              'qr_code': 'Cài đặt Quà tặng & QR',
-              'calendar': 'Cài đặt Lịch cưới',
-              'album': 'Cài đặt Album ảnh',
-              'form': 'Cài đặt RSVP Form',
-              'button_contact': 'Cài đặt Nút liên hệ'
-            }[selectedElement.type] ?? 'Cài đặt tiện ích'}
+            title={(
+              {
+                'countdown': 'Cài đặt Đếm ngược',
+                'map': 'Cài đặt Bản đồ',
+                'qr_code': 'Cài đặt Quà tặng & QR',
+                'calendar': 'Cài đặt Lịch cưới',
+                'album': 'Cài đặt Album ảnh',
+                'form': 'Cài đặt RSVP Form',
+                'button_contact': 'Cài đặt Nút liên hệ'
+              } as Record<string, string>
+            )[selectedElement.type] ?? 'Cài đặt tiện ích'}
           >
             <div style={{ padding: '0 0 24px 0' }}>
               {selectedElement.type === 'countdown' && (

@@ -789,3 +789,35 @@
     display: none !important;
   }
 }
+
+/* ── Expand Right Panel Button ───────────────────────── */
+.editor-expand-right-btn {
+  position: absolute;
+  right: 16px;
+  top: 24px;
+  z-index: 100;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.editor-expand-right-btn:hover {
+  background: #f8fafc;
+  color: var(--ed-accent);
+  border-color: var(--ed-accent-light);
+}
+
+@media (max-width: 768px) {
+  .editor-expand-right-btn {
+    display: none !important;
+  }
+}
