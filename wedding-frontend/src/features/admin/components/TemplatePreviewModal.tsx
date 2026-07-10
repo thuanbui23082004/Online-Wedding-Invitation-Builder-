@@ -55,7 +55,7 @@ export function TemplatePreviewModal({ templateId, onClose }: TemplatePreviewMod
               )}
 
               {/* blocks */}
-              {Array.isArray(template.blocks) && template.blocks.sort((a:any,b:any)=> (a.zIndex||0)-(b.zIndex||0)).map((b:any) => {
+              {Array.isArray(template.blocks) && template.blocks.sort((a: any, b: any) => (a.zIndex || 0) - (b.zIndex || 0)).map((b: any) => {
                 const style: React.CSSProperties = {
                   position: 'absolute',
                   left: b.posX ?? 0,

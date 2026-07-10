@@ -8,7 +8,7 @@ interface PreviewModalProps {
 }
 
 export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
-  const { elements, canvasBackground, canvasWidth, canvasHeight, cardId, autoScroll, autoScrollSpeed } = useEditorStore();
+  const { elements, canvasBackground, canvasWidth, canvasHeight, cardId, templateId, autoScroll, autoScrollSpeed } = useEditorStore();
   const [windowSize, setWindowSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [containerWidth, setContainerWidth] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -127,7 +127,8 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
 
   // Calculate dynamic scale based on the actual measured container width (fixes scrollbar clipping)
   const actualContainerWidth = containerWidth || (isMobile ? windowSize.w - 32 : PHONE_INNER_W);
-  const scale = actualContainerWidth / canvasWidth;
+  const safeCanvasWidth = 500;
+  const scale = actualContainerWidth / safeCanvasWidth;
 
   // Scale down the phone mockup if the user's screen is too small
   const phoneFrameH = PHONE_INNER_H + 24;
@@ -206,7 +207,7 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
               position: 'relative',
             }}>
               <div style={{
-                width: canvasWidth,
+                width: safeCanvasWidth,
                 height: canvasHeight,
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
@@ -214,7 +215,7 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
                 top: 0,
                 left: 0,
               }}>
-                <CardRenderer elements={elements} background={canvasBackground} canvasWidth={canvasWidth} />
+                <CardRenderer elements={elements} background={canvasBackground} canvasWidth={safeCanvasWidth} />
               </div>
             </div>
           </div>
@@ -249,7 +250,7 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
               position: 'relative',
             }}>
               <div style={{
-                width: canvasWidth,
+                width: safeCanvasWidth,
                 height: canvasHeight,
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',

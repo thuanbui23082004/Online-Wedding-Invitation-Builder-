@@ -366,10 +366,10 @@ interface EditorActions {
   fetchUploadedAssets: () => Promise<void>;
   setCardId: (id: string) => void;
   setAutoSaveStatus: (status: EditorState['autoSaveStatus']) => void;
-  saveCanvasNow: () => Promise<void>;
+  saveCanvasNow: (options?: { skipThumbnail?: boolean }) => Promise<void>;
   loadCardData: (cardId: string) => Promise<void>;
   loadTemplateData: (templateId: string) => Promise<void>;
-  saveTemplateNow: () => Promise<void>;
+  saveTemplateNow: (options?: { skipThumbnail?: boolean }) => Promise<void>;
   
   // Settings
   setAutoScroll: (enabled: boolean) => void;
@@ -1374,7 +1374,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
   setCardId: (id) => set({ cardId: id }),
   setAutoSaveStatus: (status) => set({ autoSaveStatus: status }),
 
-  saveCanvasNow: async () => {
+  saveCanvasNow: async (options?: { skipThumbnail?: boolean }) => {
     let currentCardId = get().cardId;
 
     if (!currentCardId) {
@@ -1464,22 +1464,24 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       }, 3000);
 
       // Capture & upload thumbnail NGẦM (fire-and-forget, không block UI)
-      void (async () => {
-        try {
-          const node = document.getElementById('editor-canvas-frame');
-          if (node) {
-            const canvas = await toCanvas(node, { cacheBust: true, useCORS: true, allowTaint: true } as any);
-            const blob = await new Promise<Blob | null>((resolve) => {
-              canvas.toBlob((b) => resolve(b), 'image/webp', 0.8);
-            });
-            if (blob) {
-              await cardsApi.uploadCardThumbnail(currentCardId!, blob);
+      if (!options?.skipThumbnail) {
+        void (async () => {
+          try {
+            const node = document.getElementById('editor-canvas-frame');
+            if (node) {
+              const canvas = await toCanvas(node, { cacheBust: true, useCORS: true, allowTaint: true } as any);
+              const blob = await new Promise<Blob | null>((resolve) => {
+                canvas.toBlob((b) => resolve(b), 'image/webp', 0.8);
+              });
+              if (blob) {
+                await cardsApi.uploadCardThumbnail(currentCardId!, blob);
+              }
             }
+          } catch (thumbErr) {
+            console.warn('[saveCanvasNow] Thumbnail upload failed (non-critical):', thumbErr);
           }
-        } catch (thumbErr) {
-          console.warn('[saveCanvasNow] Thumbnail upload failed (non-critical):', thumbErr);
-        }
-      })();
+        })();
+      }
     } catch (err) {
       console.error('[AutoSave] Failed:', err);
       set({ autoSaveStatus: 'error' });
@@ -1597,10 +1599,9 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       });
 
       const background = template.background ?? get().canvasBackground;
-      const height = template.background?.canvasHeight ?? get().canvasHeight;
-      const autoScroll = template.background?.autoScroll ?? false;
-      const autoScrollSpeed = template.background?.autoScrollSpeed ?? 50;
-
+      const height = template.settings?.canvasHeight ?? template.background?.canvasHeight ?? get().canvasHeight;
+      const autoScroll = template.settings?.autoScroll ?? template.background?.autoScroll ?? false;
+      const autoScrollSpeed = template.settings?.autoScrollSpeed ?? template.background?.autoScrollSpeed ?? 50;
       set({
         templateId,
         editorMode: 'template',
@@ -1616,8 +1617,8 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         autoSaveStatus: 'idle',
         isLoadingEditor: false,
       });
-      const mappedElements = get().elements;
-      set({ lastSavedData: JSON.stringify({ elements: mappedElements, canvasBackground: background, music: null, canvasWidth: template.canvasWidth ?? get().canvasWidth }) });
+
+      set({ lastSavedData: JSON.stringify({ elements, canvasBackground: background, music: null, canvasWidth: template.canvasWidth ?? template.settings?.canvasWidth ?? get().canvasWidth }) });
     } catch (err) {
       console.error('[loadTemplateData] Failed:', err);
       // ensure loading flag cleared on error
@@ -1625,7 +1626,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
     }
   },
 
-  saveTemplateNow: async () => {
+  saveTemplateNow: async (options?: { skipThumbnail?: boolean }) => {
     const { templateId, elements, canvasBackground, canvasWidth, lastSavedData } = get();
     if (!templateId) return;
 
@@ -1687,22 +1688,24 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       }, 3000);
 
       // Capture & upload thumbnail NGẦM (fire-and-forget, không block UI)
-      void (async () => {
-        try {
-          const node = document.getElementById('editor-canvas-frame');
-          if (node) {
-            const canvas = await toCanvas(node, { cacheBust: true, useCORS: true, allowTaint: true } as any);
-            const blob = await new Promise<Blob | null>((resolve) => {
-              canvas.toBlob((b) => resolve(b), 'image/webp', 0.8);
-            });
-            if (blob) {
-              await templatesEditorApi.uploadTemplateThumbnail(templateId, blob);
+      if (!options?.skipThumbnail) {
+        void (async () => {
+          try {
+            const node = document.getElementById('editor-canvas-frame');
+            if (node) {
+              const canvas = await toCanvas(node, { cacheBust: true, useCORS: true, allowTaint: true } as any);
+              const blob = await new Promise<Blob | null>((resolve) => {
+                canvas.toBlob((b) => resolve(b), 'image/webp', 0.8);
+              });
+              if (blob) {
+                await templatesEditorApi.uploadTemplateThumbnail(templateId, blob);
+              }
             }
+          } catch (thumbErr) {
+            console.warn('[saveTemplateNow] Thumbnail upload failed (non-critical):', thumbErr);
           }
-        } catch (thumbErr) {
-          console.warn('[saveTemplateNow] Thumbnail upload failed (non-critical):', thumbErr);
-        }
-      })();
+        })();
+      }
     } catch (err) {
       console.error('[saveTemplateNow] Failed:', err);
       set({ autoSaveStatus: 'error' });
