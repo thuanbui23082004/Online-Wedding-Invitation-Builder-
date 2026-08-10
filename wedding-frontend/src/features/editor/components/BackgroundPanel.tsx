@@ -209,7 +209,7 @@ export function BackgroundPanel({ onClose }: BackgroundPanelProps) {
               type="file"
               ref={fileInputRef}
               style={{ display: 'none' }}
-              accept="image/*"
+              accept="image/*,.svg"
               onChange={handleFileChange}
             />
 

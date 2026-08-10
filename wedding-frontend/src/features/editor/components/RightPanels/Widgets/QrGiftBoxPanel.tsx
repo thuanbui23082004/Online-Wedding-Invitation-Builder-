@@ -237,7 +237,7 @@ export function QrGiftBoxPanel({ element }: QrGiftBoxPanelProps) {
                 <div style={{ width: '48px', height: '48px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {formQrUrl ? <img src={formQrUrl} alt="QR" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '10px', color: '#94a3b8' }}>Chưa có</span>}
                 </div>
-                <input type="file" ref={qrFileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleQrUpload} />
+                <input type="file" ref={qrFileInputRef} style={{ display: 'none' }} accept="image/*,.svg" onChange={handleQrUpload} />
                 <button onClick={() => qrFileInputRef.current?.click()} disabled={isUploading} style={{ padding: '4px 12px', fontSize: '12px', borderRadius: '4px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer' }}>
                   {isUploading ? 'Đang tải...' : 'Tải lên QR'}
                 </button>

@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/share/:slug",
-            "destination": "https://online-wedding-invitation-builder-production.up.railway.app/cards/public/og/:slug"
+            "destination": "https://wedding-backend-flkj.onrender.com/cards/public/og/:slug"
         },
         {
             "source": "/(.*)",

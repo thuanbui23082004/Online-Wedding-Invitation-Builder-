@@ -236,7 +236,7 @@ function ImageUploadPanel({ onClose }: { onClose: () => void }) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.svg"
           multiple
           style={{ display: 'none' }}
           onChange={handleFileSelect}

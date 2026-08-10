@@ -302,7 +302,7 @@ export function ImageRightPanel({ id, props, elementWidth, elementHeight, active
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.svg"
           style={{ display: 'none' }}
           onChange={handleFileChange}
         />
@@ -520,7 +520,7 @@ export function ImageRightPanel({ id, props, elementWidth, elementHeight, active
                 id={`gallery-file-input-${id}`}
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,.svg"
                 onChange={handleAddGalleryImage}
                 style={{ display: 'none' }}
               />

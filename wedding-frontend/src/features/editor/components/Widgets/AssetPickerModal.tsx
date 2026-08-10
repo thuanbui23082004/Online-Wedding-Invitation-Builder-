@@ -101,7 +101,7 @@ export function AssetPickerModal({ isOpen, onClose, onSelect, multiple = true }:
                 ref={fileInputRef} 
                 className="hidden" 
                 multiple 
-                accept="image/*"
+                accept="image/*,.svg"
                 onChange={handleFileChange}
               />
             </div>

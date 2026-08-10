@@ -212,7 +212,7 @@ export function CoverPageRightPanel() {
                     type="file"
                     ref={fileInputRef}
                     style={{ display: 'none' }}
-                    accept="image/*"
+                    accept="image/*,.svg"
                     onChange={handleCustomPatternChange}
                   />
                   {coverPageProps.patternCustomImage && (

@@ -86,7 +86,7 @@ export class CardsController {
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://${process.env.FRONTEND_DOMAIN || 'online-wedding-invitation-builder-production.up.railway.app'}/share/${slug}" />
+  <meta property="og:url" content="https://${process.env.FRONTEND_DOMAIN || 'wedding-backend-flkj.onrender.com'}/share/${slug}" />
   <meta name="twitter:card" content="summary_large_image">
   <title>${title}</title>
 </head>

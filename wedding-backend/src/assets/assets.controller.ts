@@ -33,6 +33,7 @@ export class AssetsController {
           'image/png',
           'image/webp',
           'image/gif',
+          'image/svg+xml',
           'video/mp4',
           'video/quicktime',
           'audio/mpeg',
