@@ -1001,12 +1001,7 @@ export function PublicViewPage() {
           <CoverPagePreview onOpen={() => setShowCover(false)} customProps={(card?.settings as any)?.coverPage} />
         </div>
 
-        {/* Powered by Watermark */}
-        <div style={{ width: '100%', maxWidth: canvasWidth, padding: '20px 16px', textAlign: 'center' }}>
-          <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f43f5e', textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>
-            💕 Tạo thiệp cưới đẹp tại <strong style={{ marginLeft: 4 }}>DearLove</strong>
-          </a>
-        </div>
+
       </div>
 
       {music?.src && <MusicButton isPlaying={isPlaying} onToggle={toggleMusic} />}
