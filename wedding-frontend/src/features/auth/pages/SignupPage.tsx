@@ -100,7 +100,7 @@ export default function SignupPage() {
       setUser(loginResponse.data.user);
 
       toast.success('Đăng ký thành công!');
-      navigate(`/loading?next=${encodeURIComponent('/dashboard/overview')}&message=${encodeURIComponent('Đăng ký thành công!')}`);
+      navigate(`/loading?next=${encodeURIComponent('/home')}&message=${encodeURIComponent('Đăng ký thành công!')}`);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
       toast.error(typeof message === 'string' ? message : JSON.stringify(message));

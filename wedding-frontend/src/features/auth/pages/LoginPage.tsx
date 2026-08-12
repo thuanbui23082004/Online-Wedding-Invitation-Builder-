@@ -72,7 +72,7 @@ export default function LoginPage() {
       if (response.data.user.role === 'admin') {
         navigate(`/loading?next=${encodeURIComponent('/admin')}&message=${encodeURIComponent('Đăng nhập thành công!')}`);
       } else {
-        navigate(`/loading?next=${encodeURIComponent('/dashboard/overview')}&message=${encodeURIComponent('Đăng nhập thành công!')}`);
+        navigate(`/loading?next=${encodeURIComponent('/home')}&message=${encodeURIComponent('Đăng nhập thành công!')}`);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");

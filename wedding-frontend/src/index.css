@@ -36,10 +36,10 @@
 }
 
 @theme {
-    --font-sans: 'Poppins', sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-mono: ui-monospace, monospace;
-    --font-inter: 'Inter', sans-serif;
-    --font-poppins: 'Poppins', sans-serif;
+    --font-inter: 'Inter', system-ui, sans-serif;
+    --font-poppins: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-handwritten: 'DFVN-GochiHand', cursive;
     --font-serif: 'Graphik', serif;
 }

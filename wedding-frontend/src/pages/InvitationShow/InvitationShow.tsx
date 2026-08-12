@@ -49,7 +49,7 @@ export const InvitationShow: React.FC = () => {
     return (
         <div className="min-h-screen w-screen bg-zinc-100 flex items-center justify-center relative p-4 overflow-hidden select-none font-sans">
 
-            <Link to="/" className="absolute top-6 left-6 flex items-center gap-2.5 z-50">
+            <Link to="/home" className="absolute top-6 left-6 flex items-center gap-2.5 z-50">
                 <div className="bg-rose-100 p-2.5 rounded-2xl shadow-xs transition-transform hover:scale-105">
                     <RevolvingHeartsIcon size={24} color="#f43f5e" />
                 </div>

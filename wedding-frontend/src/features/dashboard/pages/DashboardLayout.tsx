@@ -36,7 +36,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
   }
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/home');
   };
 
   const displayName = user?.fullName ? user.fullName.trim().split(/\s+/).pop() : 'User';
@@ -263,7 +263,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
             <Link to="/dashboard/plan" className="cursor-pointer hover:text-rose-500 transition-colors">
               <Wallet size={20} strokeWidth={1.5} />
             </Link>
-            <Link to="/" className="cursor-pointer hover:text-rose-500 transition-colors">
+            <Link to="/home" className="cursor-pointer hover:text-rose-500 transition-colors">
               <Home size={20} strokeWidth={1.5} />
             </Link>
             <button onClick={handleLogout} className="cursor-pointer hover:text-rose-500 transition-colors">

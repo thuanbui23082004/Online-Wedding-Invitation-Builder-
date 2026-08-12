@@ -662,8 +662,8 @@ function NotFoundPage() {
       <div style={{ fontSize: 80, marginBottom: 16 }}>💔</div>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e293b', margin: '0 0 12px 0' }}>Không tìm thấy thiệp</h1>
       <p style={{ fontSize: 15, color: '#64748b', marginBottom: 32, maxWidth: 360 }}>Thiệp này không tồn tại, chưa được phát hành, hoặc đường link không chính xác.</p>
-      <button onClick={() => navigate('/')} style={{ padding: '12px 32px', borderRadius: 50, background: 'linear-gradient(135deg, #f43f5e, #fb7185)', color: '#fff', border: 'none', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(244,63,94,0.3)' }}>
-        Về trang chủ
+      <button onClick={() => navigate('/home')} style={{ padding: '12px 32px', borderRadius: 50, background: 'linear-gradient(135deg, #f43f5e, #fb7185)', color: '#fff', border: 'none', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 20px rgba(244,63,94,0.3)' }}>
+        ← Quay lại trang chủ
       </button>
     </div>
   );

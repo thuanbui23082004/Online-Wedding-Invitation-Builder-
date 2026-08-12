@@ -6,6 +6,7 @@ import { EditorPage } from './features/editor/page/EditorPage';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage/LandingPage";
+import PublicLandingPage from "./pages/PublicLandingPage/PublicLandingPage";
 import LoginPage from "./features/auth/pages/LoginPage";
 import SignupPage from "./features/auth/pages/SignupPage";
 import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
@@ -18,7 +19,6 @@ import CardDetailPage from './pages/Dashboard/CardDetailPage/CardDetailPage';
 import { PageTransition } from './components/PageTransition';
 import { RouteProgressBar } from './components/RouteProgressBar';
 import { InAppBrowserBlocker } from './components/InAppBrowserBlocker';
-
 
 // Dashboard
 import { Overview } from './features/dashboard/pages/Overview';
@@ -64,7 +64,8 @@ function App() {
       <PageTransition>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<PublicLandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/my-cards" element={<MyCardsPage />} />
           <Route path="/design" element={<EditorPage />} />
           <Route path="/design/template" element={<EditorPage />} />
@@ -110,7 +111,7 @@ function App() {
           <Route path="/view/:slug" element={<PublicViewPage />} />
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </PageTransition>
       </InAppBrowserBlocker>

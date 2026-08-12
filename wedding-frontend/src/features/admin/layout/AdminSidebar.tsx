@@ -44,7 +44,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/home');
   };
 
   const handleNavClick = () => {

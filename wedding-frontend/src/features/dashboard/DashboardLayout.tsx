@@ -56,7 +56,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode; title
       <aside className={`bg-white/45 backdrop-blur-xl border border-[rgb(255,166,166)]/30 flex flex-col h-[calc(100vh-2rem)] shadow-lg transition-all duration-350 ease-in-out shrink-0 z-30 my-4 ml-8 rounded-[2.5rem] ${isSidebarOpen ? 'w-56 opacity-100' : 'w-0 opacity-0 -translate-x-full overflow-hidden pointer-events-none ml-0 my-0 border-none'}`}>
 
         <div className="flex items-center justify-between px-5 h-16 shrink-0 border-b border-[rgb(255,166,166)]/30">
-          <Link to="/" className="flex items-center gap-2 group cursor-pointer no-underline">
+          <Link to="/home" className="flex items-center gap-2 group cursor-pointer no-underline">
             <div className="bg-[rgb(255,237,199)] p-1.5 rounded-lg transition-transform group-hover:rotate-12 flex items-center justify-center border border-[rgb(255,166,166)]/30">
               <RevolvingHeartsIcon size={20} color="rgb(235, 76, 76)" />
             </div>
