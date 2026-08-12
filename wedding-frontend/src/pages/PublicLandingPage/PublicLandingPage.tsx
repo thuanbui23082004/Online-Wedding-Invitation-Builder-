@@ -37,12 +37,14 @@ import {
   HeartHandshake,
   Phone,
   ExternalLink,
+  X,
 } from 'lucide-react';
 
 
 import { Button } from '../../components/button';
 import "./style.css";
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -102,32 +104,36 @@ export const videoSlideTemplates = [
     name: "Video Slide Cưới Sang Trọng - Mẫu Hoàng Gia 4K",
     code: "SLIDE-01",
     category: "VIDEO SLIDE 4K",
-    thumbnail: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=600",
-    driveUrl: "https://drive.google.com/file/d/1demo_slide_1/view",
+    thumbnail: "/slide-thumb-1.png",
+    driveUrl: "https://drive.google.com/file/d/1R7SQNED8w49u0l395aBFA80PcbgGUfIn/view?usp=sharing",
+    embedUrl: "https://drive.google.com/file/d/1R7SQNED8w49u0l395aBFA80PcbgGUfIn/preview",
   },
   {
     id: "slide-2",
     name: "Video Slide Cưới Chibi Dễ Thương & Lãng Mạn",
     code: "SLIDE-02",
     category: "VIDEO CHIBI",
-    thumbnail: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80&w=600",
-    driveUrl: "https://drive.google.com/file/d/1demo_slide_2/view",
+    thumbnail: "/slide-thumb-2.png",
+    driveUrl: "https://drive.google.com/file/d/1npz4V_asWZhnYQ3wqCdUkiVUxtVo4STU/view",
+    embedUrl: "https://drive.google.com/file/d/1npz4V_asWZhnYQ3wqCdUkiVUxtVo4STU/preview",
   },
   {
     id: "slide-3",
     name: "Video Màn Hình Chờ Tiệc Cưới Minimalist",
     code: "SLIDE-03",
     category: "MÀN HÌNH CHỜ",
-    thumbnail: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80&w=600",
-    driveUrl: "https://drive.google.com/file/d/1demo_slide_3/view",
+    thumbnail: "/slide-thumb-3.jpg",
+    driveUrl: "https://drive.google.com/file/d/1RLSYSGRbbxCOzcFGqt-vk7L6cC5RrMnu/view",
+    embedUrl: "https://drive.google.com/file/d/1RLSYSGRbbxCOzcFGqt-vk7L6cC5RrMnu/preview",
   },
   {
     id: "slide-4",
     name: "Video Slide Cưới Vintage Cổ Điển Tinh Tế",
     code: "SLIDE-04",
     category: "SLIDE VINTAGE",
-    thumbnail: "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80&w=600",
-    driveUrl: "https://drive.google.com/file/d/1demo_slide_4/view",
+    thumbnail: "/slide-thumb-4.png",
+    driveUrl: "https://drive.google.com/file/d/1F915bn3_4k8eTqGUROqSN_3GPs5Y1lnh/view?usp=sharing",
+    embedUrl: "https://drive.google.com/file/d/1F915bn3_4k8eTqGUROqSN_3GPs5Y1lnh/preview",
   },
 ];
 
@@ -303,6 +309,26 @@ const PublicLandingPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVideoSlide, setSelectedVideoSlide] = useState<any>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobileDevice(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (selectedVideoSlide) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedVideoSlide]);
   const [dbTemplates, setDbTemplates] = useState<any[]>([]);
   const [activeSolutionTab, setActiveSolutionTab] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -975,7 +1001,7 @@ const PublicLandingPage: React.FC = () => {
                 {/* Cover Thumbnail with Big Play Button */}
                 <div
                   className="relative aspect-video overflow-hidden bg-zinc-900 cursor-pointer"
-                  onClick={() => window.open(item.driveUrl, '_blank')}
+                  onClick={() => setSelectedVideoSlide(item)}
                 >
                   <img
                     src={item.thumbnail}
@@ -1008,15 +1034,13 @@ const PublicLandingPage: React.FC = () => {
                     <p className="text-xs font-semibold text-zinc-400 mt-1">Mã: {item.code}</p>
                   </div>
 
-                  <a
-                    href={item.driveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full h-10 rounded-full bg-zinc-50 hover:bg-[#FFF0F2] text-zinc-800 hover:text-[#700B1A] font-bold text-xs sm:text-sm border border-zinc-200/80 transition-all flex items-center justify-center gap-1.5 active:scale-95 text-center"
+                  <button
+                    onClick={() => setSelectedVideoSlide(item)}
+                    className="w-full h-10 rounded-full bg-zinc-50 hover:bg-[#FFF0F2] text-zinc-800 hover:text-[#700B1A] font-bold text-xs sm:text-sm border border-zinc-200/80 transition-all flex items-center justify-center gap-1.5 active:scale-95 text-center cursor-pointer"
                   >
-                    <span>Xem Demo Video Google Drive</span>
-                    <ExternalLink size={14} />
-                  </a>
+                    <span>Xem Video Demo 🎬</span>
+                    <Play size={14} className="fill-current text-[#700B1A]" />
+                  </button>
                 </div>
               </motion.div>
             ))}
@@ -1090,9 +1114,9 @@ const PublicLandingPage: React.FC = () => {
                     { name: 'Thiệp theo yêu cầu', price: '359.000 đ' },
                     { name: 'Thiệp điền tên từng khách cá nhân hóa', price: '+99.000đ' },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-4 text-xs sm:text-sm md:text-base font-semibold border-b border-dashed border-amber-100 last:border-0 pb-2.5 last:pb-0">
-                      <span className="text-zinc-800 text-left font-poppins">{item.name}</span>
-                      <span className="text-[#700B1A] font-black whitespace-nowrap text-sm sm:text-base md:text-lg font-poppins">{item.price}</span>
+                    <div key={idx} className="flex items-center justify-between gap-4 border-b border-dashed border-amber-100 last:border-0 pb-2.5 last:pb-0">
+                      <span className="text-zinc-800 text-left font-poppins text-sm sm:text-base md:text-lg font-bold">{item.name}</span>
+                      <span className="text-[#700B1A] font-extrabold whitespace-nowrap font-poppins text-xs sm:text-sm md:text-base">{item.price}</span>
                     </div>
                   ))}
                 </div>
@@ -1110,9 +1134,9 @@ const PublicLandingPage: React.FC = () => {
                     { name: 'Video Chibi theo mẫu', price: '200.000 đ' },
                     { name: 'Video theo yêu cầu', price: '300.000 đ' },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-4 text-xs sm:text-sm md:text-base font-semibold border-b border-dashed border-amber-100 last:border-0 pb-2.5 last:pb-0">
-                      <span className="text-zinc-800 text-left font-poppins">{item.name}</span>
-                      <span className="text-[#700B1A] font-black whitespace-nowrap text-sm sm:text-base md:text-lg font-poppins">{item.price}</span>
+                    <div key={idx} className="flex items-center justify-between gap-4 border-b border-dashed border-amber-100 last:border-0 pb-2.5 last:pb-0">
+                      <span className="text-zinc-800 text-left font-poppins text-sm sm:text-base md:text-lg font-bold">{item.name}</span>
+                      <span className="text-[#700B1A] font-extrabold whitespace-nowrap font-poppins text-xs sm:text-sm md:text-base">{item.price}</span>
                     </div>
                   ))}
                 </div>
@@ -1135,9 +1159,9 @@ const PublicLandingPage: React.FC = () => {
                       price: '550.000 đ'
                     },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 text-xs sm:text-sm md:text-base font-semibold border-b border-dashed border-amber-100 last:border-0 pb-3 last:pb-0 text-left">
-                      <span className="text-zinc-800 leading-relaxed max-w-xl font-poppins">{item.name}</span>
-                      <span className="text-[#700B1A] font-black whitespace-nowrap text-sm sm:text-base md:text-lg self-end sm:self-center font-poppins">{item.price}</span>
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 border-b border-dashed border-amber-100 last:border-0 pb-3 last:pb-0 text-left">
+                      <span className="text-zinc-800 leading-relaxed max-w-xl font-poppins text-sm sm:text-base md:text-lg font-bold">{item.name}</span>
+                      <span className="text-[#700B1A] font-extrabold whitespace-nowrap self-end sm:self-center font-poppins text-xs sm:text-sm md:text-base">{item.price}</span>
                     </div>
                   ))}
                 </div>
@@ -1167,6 +1191,119 @@ const PublicLandingPage: React.FC = () => {
       <TestimonialsSection />
       <FinalCTA />
       <Footer />
+
+      {/* Video Demo Embed Modal rendered at document.body level via React Portal */}
+      {selectedVideoSlide && createPortal(
+        <div 
+          onClick={() => setSelectedVideoSlide(null)}
+          className="fixed inset-0 z-[99999] bg-zinc-950/90 backdrop-blur-md flex items-center justify-center sm:p-6 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full h-full sm:h-auto sm:w-full sm:max-w-3xl bg-zinc-900 sm:rounded-3xl overflow-hidden shadow-2xl sm:border border-zinc-800 flex flex-col justify-between"
+          >
+            {/* Modal Header */}
+            <div className="px-3.5 py-3 sm:p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between gap-2 text-left shrink-0">
+              <div className="space-y-0.5 max-w-[82%]">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-red-950/80 text-red-400 px-2 py-0.5 rounded border border-red-900/60">
+                    {selectedVideoSlide.category}
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-bold text-zinc-400">Mã: {selectedVideoSlide.code}</span>
+                </div>
+                <h3 className="font-bold text-white text-xs sm:text-base leading-tight line-clamp-1">
+                  {selectedVideoSlide.name}
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setSelectedVideoSlide(null)}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Video Player:
+               - Mobile: thumbnail + CTA button (Google Drive embed is broken on mobile)
+               - Desktop: iframe embed */}
+            {isMobileDevice ? (
+              <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-zinc-950 gap-5 px-6 py-8">
+                {/* Thumbnail Preview */}
+                <div className="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl border border-zinc-700">
+                  <img
+                    src={selectedVideoSlide.thumbnail}
+                    alt={selectedVideoSlide.name}
+                    className="w-full h-auto object-cover"
+                  />
+                  <div className="absolute inset-0 bg-zinc-950/50 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-xl">
+                      <Play size={26} className="fill-[#700B1A] text-[#700B1A] ml-1" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center space-y-1.5">
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Nhấn để xem video chất lượng cao trực tiếp trên Google Drive
+                  </p>
+                </div>
+
+                <a
+                  href={selectedVideoSlide.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full max-w-sm px-6 py-3.5 rounded-full bg-[#700B1A] hover:bg-[#520712] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+                >
+                  <Play size={16} className="fill-white text-white" />
+                  <span>Xem Video Demo Ngay (Google Drive)</span>
+                </a>
+              </div>
+            ) : (
+              <div className="relative w-full bg-black shrink-0" style={{ aspectRatio: '16/9' }}>
+                <iframe
+                  src={selectedVideoSlide.embedUrl}
+                  title={selectedVideoSlide.name}
+                  className="absolute inset-0 w-full h-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
+            {/* Modal Footer Controls */}
+            <div className="px-3.5 py-3 sm:p-4 bg-zinc-900 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <a
+                href={selectedVideoSlide.driveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors py-0.5"
+              >
+                <span>🎬 Xem Video Fullscreen Trực Tiếp Trên Drive</span>
+                <ExternalLink size={13} />
+              </a>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => setSelectedVideoSlide(null)}
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs sm:text-sm transition-all cursor-pointer"
+                >
+                  Đóng
+                </button>
+                <a
+                  href="https://zalo.me/0329635973"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 sm:flex-none px-5 py-2 rounded-full bg-[#700B1A] hover:bg-[#520712] text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow-md whitespace-nowrap"
+                >
+                  <span>Đặt Qua Zalo 💬</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
 
 

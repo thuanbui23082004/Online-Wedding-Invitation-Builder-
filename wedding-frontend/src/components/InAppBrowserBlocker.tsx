@@ -7,8 +7,9 @@ export function InAppBrowserBlocker({ children }: { children: React.ReactNode })
   const location = useLocation();
 
   useEffect(() => {
-    // Không block đối với các trang public view (thiệp cưới online)
-    if (location.pathname.startsWith('/view/')) {
+    // Không block các trang Public (Trang chủ landing page, xem thiệp /view/, xem mẫu /templates/)
+    // Chỉ kiểm tra đối với trình chỉnh sửa /editor
+    if (!location.pathname.startsWith('/editor')) {
       setIsInApp(false);
       return;
     }
