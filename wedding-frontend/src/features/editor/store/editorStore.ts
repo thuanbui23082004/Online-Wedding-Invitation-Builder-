@@ -247,6 +247,7 @@ export const DEFAULT_BUTTON_CONTACT_PROPS: import('../types/editor.types').Butto
 };
 
 export const DEFAULT_COVER_PAGE_PROPS: import('../types/editor.types').CoverPageProps = {
+  enabled: true,
   groomName: 'Van Thuan',
   brideName: 'Anh Truc',
   nameFontSize: 42,

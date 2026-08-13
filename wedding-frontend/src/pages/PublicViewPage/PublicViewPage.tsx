@@ -726,8 +726,12 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
               canvasWidth: data.canvasWidth,
               canvasHeight: data.background?.canvasHeight || data.canvasHeight || calculatedHeight,
               music: data.background?.music || null,
+              coverPage: data.background?.coverPage,
             },
           });
+          if (data.background?.coverPage?.enabled === false) {
+            setShowCover(false);
+          }
           setLoading(false);
         })
         .catch(() => {
@@ -736,7 +740,13 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
         });
     } else {
       cardsApi.getPublicCard(slug)
-        .then(data => { setCard(data); setLoading(false); })
+        .then(data => { 
+          setCard(data); 
+          if (data.settings?.coverPage?.enabled === false) {
+            setShowCover(false);
+          }
+          setLoading(false); 
+        })
         .catch(() => { setNotFound(true); setLoading(false); });
     }
   }, [slug, isTemplate]);

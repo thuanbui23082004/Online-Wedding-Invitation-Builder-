@@ -353,6 +353,7 @@ export interface ButtonContactContent {
 
 // ── Cover Page Properties ──────────────────────────────────
 export interface CoverPageProps {
+  enabled?: boolean;
   groomName: string;
   brideName: string;
   nameFontSize: number;

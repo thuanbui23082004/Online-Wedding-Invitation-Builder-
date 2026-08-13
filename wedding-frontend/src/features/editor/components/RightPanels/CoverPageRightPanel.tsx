@@ -28,6 +28,18 @@ export function CoverPageRightPanel() {
 
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '16px 16px 0 16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={coverPageProps.enabled !== false}
+              onChange={(e) => updateCoverPageProps({ enabled: e.target.checked })}
+              style={{ accentColor: '#ff4d4f', width: '16px', height: '16px' }}
+            />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>Bật trang mở đầu</span>
+          </label>
+        </div>
+
         {/* 👫 Văn bản */}
         <Section title="Văn bản" icon={<Type size={16} />} defaultOpen={true}>
           <div className="rp-field">

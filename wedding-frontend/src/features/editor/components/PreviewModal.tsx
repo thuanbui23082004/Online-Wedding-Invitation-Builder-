@@ -13,7 +13,8 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
   const [windowSize, setWindowSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [containerWidth, setContainerWidth] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [showCover, setShowCover] = useState(true);
+  const coverPageProps = useEditorStore((state) => state.coverPageProps);
+  const [showCover, setShowCover] = useState(coverPageProps.enabled !== false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const innerContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -36,8 +37,9 @@ export function PreviewModal({ isOpen, onClose }: PreviewModalProps) {
   useEffect(() => {
     if (isOpen && containerRef.current) {
       containerRef.current.scrollTop = 0;
+      setShowCover(coverPageProps.enabled !== false);
     }
-  }, [isOpen]);
+  }, [isOpen, coverPageProps.enabled]);
 
   useEffect(() => {
     if (isOpen) {
