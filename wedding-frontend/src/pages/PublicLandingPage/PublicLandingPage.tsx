@@ -101,7 +101,7 @@ export const testimonialsData: Testimonial[] = [
 export const videoSlideTemplates = [
   {
     id: "slide-1",
-    name: "Video Slide Cưới Sang Trọng - Mẫu Hoàng Gia 4K",
+    name: "VIDEO 1",
     code: "SLIDE-01",
     category: "VIDEO SLIDE 4K",
     thumbnail: "/slide-thumb-1.png",
@@ -110,7 +110,7 @@ export const videoSlideTemplates = [
   },
   {
     id: "slide-2",
-    name: "Video Slide Cưới Chibi Dễ Thương & Lãng Mạn",
+    name: "VIDEO 2",
     code: "SLIDE-02",
     category: "VIDEO CHIBI",
     thumbnail: "/slide-thumb-2.png",
@@ -119,7 +119,7 @@ export const videoSlideTemplates = [
   },
   {
     id: "slide-3",
-    name: "Video Màn Hình Chờ Tiệc Cưới Minimalist",
+    name: "VIDEO 3",
     code: "SLIDE-03",
     category: "MÀN HÌNH CHỜ",
     thumbnail: "/slide-thumb-3.jpg",
@@ -128,7 +128,7 @@ export const videoSlideTemplates = [
   },
   {
     id: "slide-4",
-    name: "Video Slide Cưới Vintage Cổ Điển Tinh Tế",
+    name: "VIDEO 4",
     code: "SLIDE-04",
     category: "SLIDE VINTAGE",
     thumbnail: "/slide-thumb-4.png",

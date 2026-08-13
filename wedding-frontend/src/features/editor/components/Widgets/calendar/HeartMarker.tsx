@@ -28,8 +28,8 @@ export function HeartMarker({ color, size = 28, dayNumber, showDayNumber = true 
           fontSize: size * 0.45, 
           color: 'white',
           position: 'absolute', 
-          top: '50%',
-          transform: 'translateY(-52%)', 
+          top: '44%',
+          transform: 'translateY(-50%)', 
           fontWeight: 'bold',
           pointerEvents: 'none'
         }}>

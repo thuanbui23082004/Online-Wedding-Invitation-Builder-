@@ -1462,9 +1462,9 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       }
     }
 
-    const { elements, canvasBackground, music, canvasWidth, lastSavedData } = get();
+    const { elements, canvasBackground, music, canvasWidth, canvasHeight, autoScroll, autoScrollSpeed, coverPageProps, lastSavedData } = get();
 
-    const currentDataStr = JSON.stringify({ elements, canvasBackground, music, canvasWidth });
+    const currentDataStr = JSON.stringify({ elements, canvasBackground, music, canvasWidth, canvasHeight, autoScroll, autoScrollSpeed, coverPageProps });
     if (currentDataStr === lastSavedData) return;
 
     set({ autoSaveStatus: 'saving' });
@@ -1622,7 +1622,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         selectedElement: null,
         isLoadingEditor: false,
       });
-      set({ lastSavedData: JSON.stringify({ elements, canvasBackground: background, music, canvasWidth: card.canvasWidth ?? get().canvasWidth }) });
+      set({ lastSavedData: JSON.stringify({ elements, canvasBackground: background, music, canvasWidth: card.canvasWidth ?? get().canvasWidth, canvasHeight: height, autoScroll, autoScrollSpeed, coverPageProps: card.settings?.coverPage ?? DEFAULT_COVER_PAGE_PROPS }) });
     } catch (err) {
       console.error('[loadCardData] Failed:', err);
       set({ isLoadingEditor: false });
@@ -1702,7 +1702,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         isLoadingEditor: false,
       });
       const mappedElements = get().elements;
-      set({ lastSavedData: JSON.stringify({ elements: mappedElements, canvasBackground: background, music, canvasWidth: template.canvasWidth ?? get().canvasWidth }) });
+      set({ lastSavedData: JSON.stringify({ elements: mappedElements, canvasBackground: background, music, canvasWidth: template.canvasWidth ?? get().canvasWidth, canvasHeight: height, autoScroll, autoScrollSpeed, coverPageProps: template.background?.coverPage ?? DEFAULT_COVER_PAGE_PROPS }) });
     } catch (err) {
       console.error('[loadTemplateData] Failed:', err);
       // ensure loading flag cleared on error
@@ -1711,10 +1711,10 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
   },
 
   saveTemplateNow: async () => {
-    const { templateId, elements, canvasBackground, music, canvasWidth, lastSavedData } = get();
+    const { templateId, elements, canvasBackground, music, canvasWidth, canvasHeight, autoScroll, autoScrollSpeed, coverPageProps, lastSavedData } = get();
     if (!templateId) return;
 
-    const currentDataStr = JSON.stringify({ elements, canvasBackground, music, canvasWidth });
+    const currentDataStr = JSON.stringify({ elements, canvasBackground, music, canvasWidth, canvasHeight, autoScroll, autoScrollSpeed, coverPageProps });
     if (currentDataStr === lastSavedData) return;
 
     set({ autoSaveStatus: 'saving' });
