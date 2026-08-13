@@ -378,6 +378,8 @@ const PublicLandingPage: React.FC = () => {
     const demoUrl = item.demoUrl || item.previewUrl || item.link;
     if (demoUrl && (demoUrl.startsWith('http') || demoUrl.startsWith('/'))) {
       window.open(demoUrl, '_blank');
+    } else if (item.id && typeof item.id === 'string') {
+      window.open(`/view-template/${item.id}`, '_blank');
     } else {
       handleOpenModal(item);
     }
@@ -1304,6 +1306,12 @@ const PublicLandingPage: React.FC = () => {
         </div>,
         document.body
       )}
+
+      <TemplateModal
+        template={selectedTemplate}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
 
 

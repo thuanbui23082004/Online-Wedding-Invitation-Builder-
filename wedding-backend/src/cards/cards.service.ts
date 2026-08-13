@@ -187,6 +187,8 @@ export class CardsService {
         if (template.status !== 'published')
           throw new BadRequestException('Template ch╞░a ─æ╞░ß╗úc ph├ít h├ánh');
 
+        const templateBg = (template.background as any) || {};
+
         // Tạo Card kế thừa background + canvasWidth từ template
         const card = await tx.card.create({
           data: {
@@ -199,6 +201,11 @@ export class CardsService {
             background: template.background as Prisma.InputJsonValue,
             settings: {
               canvasWidth: template.canvasWidth,
+              ...(templateBg.canvasHeight !== undefined && { canvasHeight: templateBg.canvasHeight }),
+              ...(templateBg.autoScroll !== undefined && { autoScroll: templateBg.autoScroll }),
+              ...(templateBg.autoScrollSpeed !== undefined && { autoScrollSpeed: templateBg.autoScrollSpeed }),
+              ...(templateBg.coverPage !== undefined && { coverPage: templateBg.coverPage }),
+              ...(templateBg.music !== undefined && { music: templateBg.music }),
             },
           },
         });

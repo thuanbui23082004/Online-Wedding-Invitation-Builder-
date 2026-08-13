@@ -109,6 +109,7 @@ function App() {
 
           {/* Public wedding card viewer - no auth required */}
           <Route path="/view/:slug" element={<PublicViewPage />} />
+          <Route path="/view-template/:slug" element={<PublicViewPage isTemplate />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/home" replace />} />

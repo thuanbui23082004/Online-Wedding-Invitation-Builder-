@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { cardsApi } from '../../api/cardsApi';
+import { templatesApi } from '../../api/templatesApi';
 import { assetsApi } from '../../api/assetsApi';
 import type { CanvasElement, BackgroundProperties, AnimationProperties } from '../../features/editor/types/editor.types';
 import 'animate.css';
@@ -681,7 +682,7 @@ function LoadingPage() {
 }
 
 // ─── MAIN PUBLIC VIEW PAGE ────────────────────────────────
-export function PublicViewPage() {
+export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean }) {
   const { slug } = useParams<{ slug: string }>();
   const [card, setCard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -710,10 +711,35 @@ export function PublicViewPage() {
   // Fetch card data (public endpoint, no auth needed)
   useEffect(() => {
     if (!slug) return;
-    cardsApi.getPublicCard(slug)
-      .then(data => { setCard(data); setLoading(false); })
-      .catch(() => { setNotFound(true); setLoading(false); });
-  }, [slug]);
+    
+    if (isTemplate) {
+      templatesApi.getTemplateById(slug)
+        .then(data => {
+          const blocks = data.blocks || [];
+          const calculatedHeight = Math.max(900, ...blocks.map((b: any) => (b.posY || 0) + (b.height || 100))) + 150;
+          
+          // Map template data to match card structure
+          setCard({
+            ...data,
+            settings: {
+              ...(data.settings || {}),
+              canvasWidth: data.canvasWidth,
+              canvasHeight: data.background?.canvasHeight || data.canvasHeight || calculatedHeight,
+              music: data.background?.music || null,
+            },
+          });
+          setLoading(false);
+        })
+        .catch(() => {
+          setNotFound(true);
+          setLoading(false);
+        });
+    } else {
+      cardsApi.getPublicCard(slug)
+        .then(data => { setCard(data); setLoading(false); })
+        .catch(() => { setNotFound(true); setLoading(false); });
+    }
+  }, [slug, isTemplate]);
 
   // Fetch and inject public fonts
   useEffect(() => {
@@ -828,7 +854,8 @@ export function PublicViewPage() {
 
   // Auto-scroll logic (Super Smooth Implementation)
   useEffect(() => {
-    if (!card || !card.settings?.autoScroll || showCover) return;
+    const shouldAutoScroll = card?.settings?.autoScroll ?? isTemplate; // Default true for templates
+    if (!card || !shouldAutoScroll || showCover) return;
 
     let animationFrameId: number;
     let lastTime = performance.now();
@@ -932,7 +959,11 @@ export function PublicViewPage() {
 
   const elements: CanvasElement[] = (card.blocks || []).map((b: any) => {
     const elType = blockTypeToElementType(b.blockType);
-    const base = { id: b.id, type: elType, x: b.posX, y: b.posY, width: b.width, height: b.height, zIndex: b.zIndex, rotation: b.rotation || 0, isLocked: b.isLocked, animationProps: b.style && Object.keys(b.style).length > 0 ? b.style : undefined };
+    let ap = b.style;
+    if (typeof ap === 'string') {
+      try { ap = JSON.parse(ap); } catch (e) {}
+    }
+    const base = { id: b.id, type: elType, x: b.posX, y: b.posY, width: b.width, height: b.height, zIndex: b.zIndex, rotation: b.rotation || 0, isLocked: b.isLocked, animationProps: ap && Object.keys(ap).length > 0 ? ap : undefined };
     switch (elType) {
       case 'text': return { ...base, textProps: b.content };
       case 'image': return { ...base, imageProps: b.content };

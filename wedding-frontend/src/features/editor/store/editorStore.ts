@@ -1681,12 +1681,14 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
       }
       const autoScroll = template.background?.autoScroll ?? false;
       const autoScrollSpeed = template.background?.autoScrollSpeed ?? 50;
+      const music = template.background?.music ?? null;
 
       set({
         templateId,
         editorMode: 'template',
         elements,
         canvasBackground: background,
+        music,
         canvasWidth: template.canvasWidth ?? get().canvasWidth,
         canvasHeight: height,
         autoScroll,
@@ -1699,7 +1701,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
         isLoadingEditor: false,
       });
       const mappedElements = get().elements;
-      set({ lastSavedData: JSON.stringify({ elements: mappedElements, canvasBackground: background, music: null, canvasWidth: template.canvasWidth ?? get().canvasWidth }) });
+      set({ lastSavedData: JSON.stringify({ elements: mappedElements, canvasBackground: background, music, canvasWidth: template.canvasWidth ?? get().canvasWidth }) });
     } catch (err) {
       console.error('[loadTemplateData] Failed:', err);
       // ensure loading flag cleared on error
@@ -1708,10 +1710,10 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
   },
 
   saveTemplateNow: async () => {
-    const { templateId, elements, canvasBackground, canvasWidth, lastSavedData } = get();
+    const { templateId, elements, canvasBackground, music, canvasWidth, lastSavedData } = get();
     if (!templateId) return;
 
-    const currentDataStr = JSON.stringify({ elements, canvasBackground, music: null, canvasWidth });
+    const currentDataStr = JSON.stringify({ elements, canvasBackground, music, canvasWidth });
     if (currentDataStr === lastSavedData) return;
 
     set({ autoSaveStatus: 'saving' });
@@ -1761,6 +1763,7 @@ export const useEditorStore = create<EditorState & EditorActions>((set, get) => 
           autoScroll: get().autoScroll,
           autoScrollSpeed: get().autoScrollSpeed,
           coverPage: get().coverPageProps,
+          music: get().music,
         },
       });
 

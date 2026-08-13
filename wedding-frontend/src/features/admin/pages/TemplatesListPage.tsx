@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit3, Trash2, CheckCircle, Archive, Crown, Loader2, X, Check } from 'lucide-react';
+import { Search, Plus, Edit3, Trash2, CheckCircle, Archive, Crown, Loader2, X, Check, ExternalLink } from 'lucide-react';
 import { adminApi, type AdminTemplate } from '../api/adminApi';
 import { useNavigate } from 'react-router-dom';
 
@@ -296,6 +296,10 @@ export function TemplatesListPage() {
                     <Edit3 size={13} /> Sửa
                   </button>
                  
+                  <button className="adm-btn adm-btn-outline adm-btn-sm" style={{ background: 'rgba(255,255,255,0.9)' }} onClick={() => window.open(`/view-template/${t.id}`, '_blank')}>
+                    <ExternalLink size={13} /> Xem
+                  </button>
+
                   <button className="adm-btn adm-btn-danger-ghost adm-btn-sm" style={{ background: 'rgba(255,255,255,0.9)', color: '#ef4444' }} onClick={() => handleDelete(t.id)}>
                     <Trash2 size={13} />
                   </button>
