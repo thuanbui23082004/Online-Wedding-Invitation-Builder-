@@ -30,7 +30,7 @@ export interface CardItem {
 export interface CardItemProps {
   card: CardItem;
   onDelete: (id: string) => void;
-  onDuplicate: (id: string) => Promise<void>;
+  onDuplicate?: (id: string) => Promise<void>;
 }
 
 export function CardItem({ card, onDelete, onDuplicate }: CardItemProps) {
@@ -161,17 +161,19 @@ export function CardItem({ card, onDelete, onDuplicate }: CardItemProps) {
           <Edit2 size={15} />
         </button>
 
-        {/* Duplicate button */}
-        <button
-          onClick={handleDuplicate}
-          disabled={isDuplicating}
-          className="px-3.5 py-2 border border-amber-100 text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 rounded-lg transition-colors flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
-          title="Tạo bản sao"
-        >
-          {isDuplicating
-            ? <Loader2 size={15} className="animate-spin" />
-            : <CopyPlus size={15} />}
-        </button>
+        {/* Duplicate button — chỉ hiện khi có onDuplicate */}
+        {onDuplicate && (
+          <button
+            onClick={handleDuplicate}
+            disabled={isDuplicating}
+            className="px-3.5 py-2 border border-amber-100 text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 rounded-lg transition-colors flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Tạo bản sao"
+          >
+            {isDuplicating
+              ? <Loader2 size={15} className="animate-spin" />
+              : <CopyPlus size={15} />}
+          </button>
+        )}
 
         {/* Delete Inline Confirm */}
         {isConfirmingDelete ? (
