@@ -127,4 +127,9 @@ export const cardsApi = {
     });
     return response.data;
   },
+
+  duplicateCard: async (cardId: string) => {
+    const response = await axiosClient.post(`/cards/${cardId}/duplicate`);
+    return response.data;
+  },
 };

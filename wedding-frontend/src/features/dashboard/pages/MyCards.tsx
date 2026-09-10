@@ -47,6 +47,17 @@ export const MyCards = () => {
     }
   };
 
+  const handleDuplicate = async (id: string) => {
+    try {
+      await cardsApi.duplicateCard(id);
+      toast.success('Tạo bản sao thành công! Thiệp mới đã được thêm vào danh sách.', { duration: 4000 });
+      fetchCards();
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Không thể tạo bản sao thiệp!');
+    }
+  };
+
   return (
     <DashboardLayout>
       <DashboardPanel className="p-4 md:p-8 min-h-[75vh]">
@@ -101,6 +112,7 @@ export const MyCards = () => {
                     updatedAt: card.updatedAt
                   }}
                   onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
                 />
               ))}
             </div>

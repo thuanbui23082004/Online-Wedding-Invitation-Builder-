@@ -175,6 +175,14 @@ export class CardsController {
     return this.cardsService.archiveCard(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post(':id/duplicate')
+  @ApiOperation({ summary: 'Nhân bản thiệp (clone toàn bộ card + blocks thành thiệp mới)' })
+  duplicateCard(@Param('id', ParseUUIDPipe) id: string, @Req() req: AuthRequest) {
+    return this.cardsService.duplicateCard(id, req.user.id);
+  }
+
   // ==========================================================================
   // CANVAS AUTO-SAVE — FE gọi mỗi 30 giây
   // ==========================================================================

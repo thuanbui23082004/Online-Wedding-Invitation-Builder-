@@ -263,7 +263,72 @@ export class CardsService {
   }
 
   /**
-   * Lß║Ñy danh s├ích thiß╗çp cß╗ºa user vß╗¢i ph├ón trang v├á bß╗Ö lß╗ìc.
+   * Nhân bản thiệp: clone toàn bộ card + blocks thành thiệp mới.
+   * Title mới: "Bản sao của <title gốc>"
+   * Slug mới: được sinh unique từ title mới.
+   */
+  async duplicateCard(cardId: string, userId: string) {
+    // 1. Lấy card gốc kèm blocks (phải thuộc userId)
+    const original = await this.prisma.card.findUnique({
+      where: { id: cardId },
+      include: { blocks: { orderBy: { zIndex: 'asc' } } },
+    });
+    if (!original) throw new NotFoundException('Không tìm thấy thiệp');
+    if (original.userId !== userId)
+      throw new ForbiddenException('Bạn không có quyền nhân bản thiệp này');
+
+    const newTitle = `Bản sao của ${original.title}`;
+    const newSlug = await this.generateUniqueSlug(newTitle);
+
+    return this.prisma.$transaction(async (tx) => {
+      // 2. Tạo card mới (draft, không công khai)
+      const newCard = await tx.card.create({
+        data: {
+          userId,
+          slug: newSlug,
+          title: newTitle,
+          groomName: original.groomName,
+          brideName: original.brideName,
+          background: original.background as Prisma.InputJsonValue,
+          settings: original.settings as Prisma.InputJsonValue,
+          templateId: original.templateId,
+          status: 'draft',
+          isPublic: false,
+        },
+      });
+
+      // 3. Clone toàn bộ blocks
+      if (original.blocks.length > 0) {
+        await tx.cardBlock.createMany({
+          data: original.blocks.map((block) => ({
+            cardId: newCard.id,
+            blockType: block.blockType,
+            posX: block.posX,
+            posY: block.posY,
+            width: block.width,
+            height: block.height,
+            rotation: block.rotation,
+            zIndex: block.zIndex,
+            content: block.content as Prisma.InputJsonValue,
+            style: block.style as Prisma.InputJsonValue,
+            isLocked: block.isLocked,
+            isVisible: block.isVisible,
+            sourceTemplateBlockId: block.sourceTemplateBlockId,
+            sourceElementId: block.sourceElementId,
+          })),
+        });
+      }
+
+      // 4. Trả về card mới kèm blocks
+      return tx.card.findUnique({
+        where: { id: newCard.id },
+        include: { blocks: { orderBy: { zIndex: 'asc' } } },
+      });
+    });
+  }
+
+  /**
+   * Lấy danh sách thiệp của user với phân trang và bộ lọc.
    */
   async getUserCards(userId: string, query: QueryCardDto) {
     const {

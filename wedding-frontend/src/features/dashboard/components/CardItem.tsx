@@ -12,7 +12,9 @@ import {
   ExternalLink,
   Edit2,
   Trash2,
-  BarChart2
+  BarChart2,
+  CopyPlus,
+  Loader2
 } from 'lucide-react';
 
 export interface CardItem {
@@ -28,13 +30,25 @@ export interface CardItem {
 export interface CardItemProps {
   card: CardItem;
   onDelete: (id: string) => void;
+  onDuplicate: (id: string) => Promise<void>;
 }
 
-export function CardItem({ card, onDelete }: CardItemProps) {
+export function CardItem({ card, onDelete, onDuplicate }: CardItemProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
+  const handleDuplicate = async () => {
+    if (isDuplicating) return;
+    setIsDuplicating(true);
+    try {
+      await onDuplicate(card.id);
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
 
   const fullLink = `${window.location.origin}/share/${card.slug}`;
 
@@ -145,6 +159,18 @@ export function CardItem({ card, onDelete }: CardItemProps) {
           title="Chỉnh sửa"
         >
           <Edit2 size={15} />
+        </button>
+
+        {/* Duplicate button */}
+        <button
+          onClick={handleDuplicate}
+          disabled={isDuplicating}
+          className="px-3.5 py-2 border border-amber-100 text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 rounded-lg transition-colors flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+          title="Tạo bản sao"
+        >
+          {isDuplicating
+            ? <Loader2 size={15} className="animate-spin" />
+            : <CopyPlus size={15} />}
         </button>
 
         {/* Delete Inline Confirm */}
