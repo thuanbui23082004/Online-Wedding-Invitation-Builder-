@@ -41,7 +41,7 @@ export function CardItem({ card, onDelete, onDuplicate }: CardItemProps) {
   const [isDuplicating, setIsDuplicating] = useState(false);
 
   const handleDuplicate = async () => {
-    if (isDuplicating) return;
+    if (isDuplicating || !onDuplicate) return;
     setIsDuplicating(true);
     try {
       await onDuplicate(card.id);
