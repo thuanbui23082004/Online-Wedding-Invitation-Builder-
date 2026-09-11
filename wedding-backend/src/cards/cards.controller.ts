@@ -75,6 +75,7 @@ export class CardsController {
     const settings = card.settings as Record<string, any> || {};
     const desc = settings?.description || 'Trân trọng kính mời quý khách đến dự tiệc cưới của chúng tôi.';
     const img = card.thumbnailUrl || 'https://via.placeholder.com/600x315?text=Wedding+Invitation';
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
     const html = `
 <!DOCTYPE html>
 <html lang="vi">
@@ -86,12 +87,12 @@ export class CardsController {
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://${process.env.FRONTEND_DOMAIN || 'wedding-backend-flkj.onrender.com'}/share/${slug}" />
+  <meta property="og:url" content="${frontendUrl}/share/${slug}" />
   <meta name="twitter:card" content="summary_large_image">
   <title>${title}</title>
 </head>
 <body>
-  <script>window.location.href = "/view/${slug}";</script>
+  <script>window.location.href = "${frontendUrl}/view/${slug}";</script>
 </body>
 </html>
     `;

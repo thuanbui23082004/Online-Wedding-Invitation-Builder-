@@ -3,7 +3,7 @@
 // ============================================================
 
 import { EditorPage } from './features/editor/page/EditorPage';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 
 import LandingPage from "./pages/LandingPage/LandingPage";
 import PublicLandingPage from "./pages/PublicLandingPage/PublicLandingPage";
@@ -48,6 +48,12 @@ import { Contact } from './pages/Contact/Contact';
 import { PublicViewPage } from './pages/PublicViewPage/PublicViewPage';
 import { TemplatesDashboard } from './features/dashboard/pages/TemplatesDashboard';
 
+
+/** Redirect /share/:slug → /view/:slug (fallback khi Vercel rewrite không xử lý) */
+function ShareRedirect() {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={`/view/${slug}`} replace />;
+}
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -110,6 +116,8 @@ function App() {
           {/* Public wedding card viewer - no auth required */}
           <Route path="/view/:slug" element={<PublicViewPage />} />
           <Route path="/view-template/:slug" element={<PublicViewPage isTemplate />} />
+          {/* Share link fallback — redirect to viewer */}
+          <Route path="/share/:slug" element={<ShareRedirect />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/home" replace />} />
