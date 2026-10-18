@@ -1,0 +1,177 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------- Gate 1: quét secret trong toàn bộ lịch sử ----------
+  secrets-scan:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------- Gate 2: lint cả hai Dockerfile ----------
+  dockerfile-lint:
+    name: Dockerfile lint (Hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: wedding-backend/Dockerfile
+          failure-threshold: warning
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: wedding-frontend/Dockerfile
+          failure-threshold: warning
+
+  # ---------- Gate 3: lint, test/build, audit cho từng service ----------
+  quality:
+    name: Quality (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [wedding-backend, wedding-frontend]
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.service }}/package-lock.json
+      - run: npm ci
+
+      - name: Prisma generate (backend)
+        if: ${{ matrix.service == 'wedding-backend' }}
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint:ci
+
+      - name: Unit test (backend)
+        if: ${{ matrix.service == 'wedding-backend' }}
+        run: npm run test
+
+      - name: Type-check và build (frontend)
+        if: ${{ matrix.service == 'wedding-frontend' }}
+        run: npm run build
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+  # ---------- Gate 4: e2e backend với PostgreSQL thật ----------
+  backend-e2e:
+    name: Backend e2e (PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wedding-backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: wedding_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd 'pg_isready -U test -d wedding_test'
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Toàn bộ là giá trị GIẢ chỉ dùng cho CI, không phải secret thật
+      DATABASE_URL: postgresql://test:test@localhost:5432/wedding_test
+      NODE_ENV: test
+      FRONTEND_URL: http://localhost:8080
+      JWT_ACCESS_TOKEN_SECRET: ci-only-access-secret
+      JWT_ACCESS_EXPIRES: 15m
+      JWT_REFRESH_TOKEN_SECRET: ci-only-refresh-secret
+      JWT_REFRESH_EXPIRES: 7d
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: wedding-backend/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy # nếu chưa có migrations: npx prisma db push
+      - run: npm run test:e2e
+
+  # ---------- Gate 5: build image và quét ----------
+  build-and-scan:
+    name: Build and scan (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: [secrets-scan, dockerfile-lint, quality, backend-e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [wedding-backend, wedding-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: false
+          load: true
+          tags: ${{ matrix.service }}:ci
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+      - name: Scan image (Trivy) - GATE
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ matrix.service }}:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+  # ---------- Gate 6: chạy cả hệ thống và gọi thử ----------
+  compose-smoke:
+    name: Smoke test (Compose)
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tạo file env giả cho CI
+        run: |
+          echo 'DB_PASSWORD=ci-only-password' > .env
+          cp wedding-backend/.env.example wedding-backend/.env
+      - name: Khởi động toàn bộ hệ thống
+        run: docker compose up -d --build --wait
+      - name: Gọi thử backend và frontend
+        run: |
+          curl --fail --retry 5 --retry-delay 3 http://localhost:8000/health
+          curl --fail --retry 5 --retry-delay 3 http://localhost:8080/
+      - name: In log khi thất bại
+        if: failure()
+        run: docker compose logs
+      - name: Dọn dẹp
+        if: always()
+        run: docker compose down -v
