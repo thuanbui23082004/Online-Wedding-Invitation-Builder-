@@ -23,12 +23,15 @@ FROM node:22-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+# hadolint ignore=DL3005,DL3008
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Prisma Client đã được sinh ở stage build, chép sang để runtime dùng
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
