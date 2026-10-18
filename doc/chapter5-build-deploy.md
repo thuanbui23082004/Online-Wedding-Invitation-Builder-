@@ -206,32 +206,69 @@ axiosClient.interceptors.request.use((config) => {
 
 ### 5.4.2 Chuẩn Response
 
-Mọi API response đều trả về JSON với HTTP status code chuẩn REST:
+Dự án **không** sử dụng một cấu trúc bọc (wrapper) chung kiểu `{ "success": true, "data": ... }` cho mọi API. Thay vào đó, API trả về JSON trực tiếp hoặc dựa trên exception của NestJS với HTTP status code chuẩn REST:
 
-```
+```text
 Thành công: 200 OK | 201 Created
 Lỗi client: 400 Bad Request | 401 Unauthorized | 403 Forbidden | 404 Not Found
 Lỗi server: 500 Internal Server Error | 503 Service Unavailable
 ```
 
-**Ví dụ response thành công (Lưu canvas):**
+**1. Response Thành Công**
+Trả về trực tiếp dữ liệu (object, array) hoặc một message đơn giản. Với các API danh sách (có phân trang), dữ liệu được bọc trong object gồm `data` và `pagination`.
+
+*Ví dụ response đơn lẻ (Chi tiết thẻ, Login...):*
 ```json
 {
   "id": "uuid-card-id",
   "title": "Thiệp cưới Thuận & Trúc",
   "status": "draft",
-  "blocks": [...],
-  "background": { "type": "solid", "color": "#ffffff" },
-  "settings": { "canvasWidth": 500, "canvasHeight": 2000 }
+  "isPublic": true,
+  "createdAt": "2024-05-12T08:00:00Z"
 }
 ```
 
-**Ví dụ response lỗi (AI processing):**
+*Ví dụ response danh sách có phân trang:*
 ```json
 {
-  "success": false,
-  "error": "Clipdrop remove-bg error (429): Rate limit exceeded",
-  "code": "API_ERROR_CLIPDROP"
+  "data": [
+    { "id": "card-1", "title": "Thiệp 1" },
+    { "id": "card-2", "title": "Thiệp 2" }
+  ],
+  "pagination": {
+    "total": 10,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  }
+}
+```
+
+*Ví dụ response hành động đơn giản:*
+```json
+{
+  "message": "Xóa thiệp thành công"
+}
+```
+
+**2. Response Lỗi**
+Dự án sử dụng các Exception mặc định của NestJS (`BadRequestException`, `NotFoundException`, `ForbiddenException`, v.v.). NestJS sẽ tự động format lỗi với cấu trúc chuẩn:
+
+*Ví dụ lỗi xác thực (401 Unauthorized) hoặc Validation (400 Bad Request):*
+```json
+{
+  "message": "Thông tin đăng nhập không hợp lệ",
+  "error": "Unauthorized",
+  "statusCode": 401
+}
+```
+
+*Ví dụ lỗi không tìm thấy (404 Not Found):*
+```json
+{
+  "message": "Không tìm thấy thiệp",
+  "error": "Not Found",
+  "statusCode": 404
 }
 ```
 
