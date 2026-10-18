@@ -74,6 +74,7 @@ export const PaymentQR: React.FC = () => {
       setCopiedField(field)
       setTimeout(() => setCopiedField(null), 1500)
     } catch {
+      // ignore clipboard error
     }
   }
 

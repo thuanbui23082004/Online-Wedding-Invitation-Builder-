@@ -11,11 +11,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

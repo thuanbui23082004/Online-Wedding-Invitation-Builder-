@@ -13,11 +13,12 @@ interface CalendarPublicProps {
 
 export function CalendarPublic({ block, scaleFactor = 1 }: CalendarPublicProps) {
   const props = block.calendarProps;
-  if (!props) return null;
 
   const currentMonth = useMemo(() => {
-    return props.primaryDate ? parseDate(props.primaryDate) : new Date();
-  }, [props.primaryDate]);
+    return props?.primaryDate ? parseDate(props.primaryDate) : new Date();
+  }, [props?.primaryDate]);
+
+  if (!props) return null;
   
   const scaledProps = {
     ...props,

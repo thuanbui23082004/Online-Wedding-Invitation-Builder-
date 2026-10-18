@@ -20,7 +20,7 @@ export class AssetsService {
   constructor(
     @Inject('CLOUDINARY') private cloudinary: typeof Cloudinary,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   // Xác định loại asset dựa theo mimetype thực tế của file
   private resolveAssetType(mimetype: string, filename?: string): AssetType {
@@ -320,7 +320,7 @@ export class AssetsService {
     path = path.replace(/\.[^/.]+$/, ''); // bỏ đuôi file (.jpg, .mp4...)
     try {
       return decodeURIComponent(path);
-    } catch (e) {
+    } catch (_e) {
       return path;
     }
   }

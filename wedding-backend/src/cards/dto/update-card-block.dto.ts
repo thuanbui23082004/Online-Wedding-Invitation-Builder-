@@ -1,14 +1,12 @@
 // src/cards/dto/update-card-block.dto.ts
 import {
   IsBoolean,
-  IsEnum,
   IsInt,
   IsNumber,
   IsObject,
   IsOptional,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { BlockType } from '@prisma/client';
 
 export class UpdateCardBlockDto {
   @ApiPropertyOptional({ description: 'Vị trí X trên canvas' })

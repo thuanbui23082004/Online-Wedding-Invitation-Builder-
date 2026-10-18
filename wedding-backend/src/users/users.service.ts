@@ -13,7 +13,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async validateCurrentPlanId(
     currentPlanId: string | null | undefined,
@@ -120,7 +120,7 @@ export class UsersService {
     if (!hash) {
       return false;
     }
-    return bcrypt.compareSync(password, hash);
+    return await bcrypt.compare(password, hash);
   }
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     // Ensure user exists

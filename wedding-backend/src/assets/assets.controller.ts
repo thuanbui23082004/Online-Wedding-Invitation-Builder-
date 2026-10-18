@@ -5,7 +5,6 @@ import {
   Get,
   Delete,
   Param,
-  Query,
   UseInterceptors,
   UploadedFile,
   UseGuards,
@@ -20,7 +19,7 @@ import { AssetsService } from './assets.service';
 
 @Controller('assets')
 export class AssetsController {
-  constructor(private readonly assetsService: AssetsService) { }
+  constructor(private readonly assetsService: AssetsService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('upload')

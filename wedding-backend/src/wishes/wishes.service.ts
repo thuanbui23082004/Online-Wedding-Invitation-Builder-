@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class WishesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // =========================================================================
   // PRIVATE HELPERS

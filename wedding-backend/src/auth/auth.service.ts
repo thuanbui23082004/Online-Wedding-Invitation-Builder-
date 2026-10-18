@@ -45,7 +45,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findOneByEmail(email);
@@ -174,7 +174,7 @@ export class AuthService {
           'Refresh token khong hop le. Vui long login',
         );
       }
-    } catch (e) {
+    } catch (_e) {
       throw new BadRequestException(
         'Refresh token khong hop le. Vui long login',
       );

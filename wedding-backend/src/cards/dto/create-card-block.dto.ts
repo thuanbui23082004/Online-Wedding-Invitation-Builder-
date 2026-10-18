@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsObject,
   IsUUID,
-  IsString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BlockType } from '@prisma/client';

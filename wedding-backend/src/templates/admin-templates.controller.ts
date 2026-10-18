@@ -19,17 +19,22 @@ import { TemplatesService } from './templates.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { Request } from 'express';
 import {
   CreateAdminTemplateDto,
   UpdateAdminTemplateDto,
   UpdateTemplateOrderDto,
 } from './dto/admin-template.dto';
 
+interface RequestWithUser extends Request {
+  user: { id: string; email?: string; role?: string };
+}
+
 @Controller('admin/templates')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
 export class AdminTemplatesController {
-  constructor(private readonly service: TemplatesService) { }
+  constructor(private readonly service: TemplatesService) {}
 
   // GET /api/admin/templates
   @Get()
@@ -39,7 +44,7 @@ export class AdminTemplatesController {
 
   // POST /api/admin/templates
   @Post()
-  createTemplate(@Body() dto: CreateAdminTemplateDto, @Req() req: any) {
+  createTemplate(@Body() dto: CreateAdminTemplateDto, @Req() req: RequestWithUser) {
     const userId = req.user.id;
     return this.service.createTemplate(dto, userId);
   }
@@ -80,7 +85,7 @@ export class AdminTemplatesController {
   uploadThumbnail(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ) {
     if (!file) throw new BadRequestException('Không tìm thấy file tải lên');
     const userId = req.user.id;

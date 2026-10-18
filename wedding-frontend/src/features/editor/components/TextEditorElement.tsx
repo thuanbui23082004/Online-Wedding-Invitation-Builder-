@@ -14,19 +14,17 @@ interface TextEditorElementProps {
 
 export function TextEditorElement({ element }: TextEditorElementProps) {
   const tp = element.textProps;
-  if (!tp) return null;
-
   const { updateTextProp, pushHistory } = useEditorStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [tempText, setTempText] = useState(tp.content);
+  const [tempText, setTempText] = useState(tp?.content ?? '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync state when content changes externally
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditing && tp?.content !== undefined) {
       setTempText(tp.content);
     }
-  }, [tp.content, isEditing]);
+  }, [tp?.content, isEditing]);
 
   // Focus and select the textarea on editing activation
   useEffect(() => {
@@ -35,6 +33,8 @@ export function TextEditorElement({ element }: TextEditorElementProps) {
       textareaRef.current.select();
     }
   }, [isEditing]);
+
+  if (!tp) return null;
 
   const style: React.CSSProperties = {
     fontFamily: tp.fontFamily,
