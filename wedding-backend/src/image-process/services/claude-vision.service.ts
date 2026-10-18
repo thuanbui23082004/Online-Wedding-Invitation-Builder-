@@ -19,8 +19,9 @@ export class ClaudeVisionService {
   private readonly client: Anthropic;
 
   constructor(private readonly config: ConfigService) {
+    const apiKey = this.config.get<string>('ANTHROPIC_API_KEY') || 'dummy-key';
     this.client = new Anthropic({
-      apiKey: this.config.getOrThrow<string>('ANTHROPIC_API_KEY'),
+      apiKey,
     });
   }
 

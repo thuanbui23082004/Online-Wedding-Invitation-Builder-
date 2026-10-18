@@ -27,7 +27,7 @@ export class ExpandImageService {
     private readonly preprocessor: PreprocessorService,
     private readonly geminiVision: GeminiVisionService,
   ) {
-    this.apiKey = this.config.getOrThrow<string>('STABILITY_API_KEY');
+    this.apiKey = this.config.get<string>('STABILITY_API_KEY') || '';
   }
 
   async expandImage(params: ExpandImageParams): Promise<Buffer> {

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { cardsApi } from '../../api/cardsApi';
 import { templatesApi } from '../../api/templatesApi';
 import { assetsApi } from '../../api/assetsApi';
-import type { CanvasElement, BackgroundProperties, AnimationProperties } from '../../features/editor/types/editor.types';
+import type { CanvasElement, BackgroundProperties, AnimationProperties, CoverPageProps } from '../../features/editor/types/editor.types';
 import 'animate.css';
 import { RedEnvelope } from '../../features/editor/components/Widgets/RedEnvelope';
 import { X, Music, VolumeX } from 'lucide-react';
@@ -168,9 +168,10 @@ function PublicShapeElement({ element }: { element: CanvasElement }) {
 // ─── Countdown Renderer ───────────────────────────────────
 function PublicCountdownElement({ element }: { element: CanvasElement }) {
   const props = element.countdownProps;
-  if (!props) return null;
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
   useEffect(() => {
+    if (!props) return;
     const calc = () => {
       const target = new Date(`${props.targetDate}T${props.targetTime}`);
       const diff = target.getTime() - Date.now();
@@ -183,8 +184,13 @@ function PublicCountdownElement({ element }: { element: CanvasElement }) {
         });
       }
     };
-    calc(); const t = setInterval(calc, 1000); return () => clearInterval(t);
-  }, [props.targetDate, props.targetTime]);
+    calc();
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
+  }, [props?.targetDate, props?.targetTime]);
+
+  if (!props) return null;
+
   const items = [
     { show: props.showDays, val: timeLeft.days, label: props.label?.days || (props.language === 'vi' ? 'Ngày' : 'Days') },
     { show: props.showHours, val: timeLeft.hours, label: props.label?.hours || (props.language === 'vi' ? 'Giờ' : 'Hours') },
@@ -194,7 +200,7 @@ function PublicCountdownElement({ element }: { element: CanvasElement }) {
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: props.direction === 'horizontal' ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: props.spacing, fontFamily: props.font }}>
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: props.backgroundColor, opacity: props.opacity, padding: `${props.paddingTop}px ${props.paddingRight}px ${props.paddingBottom}px ${props.paddingLeft}px`, borderWidth: props.borderWidth, borderColor: props.borderColor, borderRadius: props.borderRadius, borderStyle: props.borderStyle as any, boxShadow: `${props.shadowX}px ${props.shadowY}px ${props.shadowBlur}px ${props.shadowSpread}px ${props.shadowColor}`, boxSizing: 'border-box', minWidth: 50 }}>
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: props.backgroundColor, opacity: props.opacity, padding: `${props.paddingTop}px ${props.paddingRight}px ${props.paddingBottom}px ${props.paddingLeft}px`, borderWidth: props.borderWidth, borderColor: props.borderColor, borderRadius: props.borderRadius, borderStyle: props.borderStyle as React.CSSProperties['borderStyle'], boxShadow: `${props.shadowX}px ${props.shadowY}px ${props.shadowBlur}px ${props.shadowSpread}px ${props.shadowColor}`, boxSizing: 'border-box', minWidth: 50 }}>
           <span style={{ fontSize: props.fontSize, fontWeight: 700, color: props.textColor, lineHeight: 1 }}>{String(item.val).padStart(2, '0')}</span>
           <span style={{ fontSize: props.fontSize * 0.45, color: props.frameColor, marginTop: 2, textTransform: 'uppercase', letterSpacing: 1 }}>{item.label}</span>
         </div>
@@ -211,7 +217,7 @@ function PublicMapElement({ element }: { element: CanvasElement }) {
     ? `https://maps.google.com/maps?q=${mp.lat},${mp.lng}&z=${mp.zoomLevel}&output=embed&hl=${mp.language}`
     : `https://maps.google.com/maps?q=${encodeURIComponent(mp.address)}&z=${mp.zoomLevel}&output=embed&hl=${mp.language}`;
   return (
-    <div style={{ width: '100%', height: '100%', opacity: mp.opacity, padding: `${mp.paddingTop}px ${mp.paddingRight}px ${mp.paddingBottom}px ${mp.paddingLeft}px`, borderWidth: mp.borderWidth, borderColor: mp.borderColor, borderRadius: mp.borderRadius, borderStyle: mp.borderStyle as any, boxShadow: `${mp.shadowX}px ${mp.shadowY}px ${mp.shadowBlur}px ${mp.shadowSpread}px ${mp.shadowColor}`, boxSizing: 'border-box', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100%', opacity: mp.opacity, padding: `${mp.paddingTop}px ${mp.paddingRight}px ${mp.paddingBottom}px ${mp.paddingLeft}px`, borderWidth: mp.borderWidth, borderColor: mp.borderColor, borderRadius: mp.borderRadius, borderStyle: mp.borderStyle as React.CSSProperties['borderStyle'], boxShadow: `${mp.shadowX}px ${mp.shadowY}px ${mp.shadowBlur}px ${mp.shadowSpread}px ${mp.shadowColor}`, boxSizing: 'border-box', overflow: 'hidden' }}>
       <iframe src={src} width="100%" height="100%" style={{ border: 0 }} loading="lazy" title="Bản đồ" />
     </div>
   );
@@ -219,11 +225,9 @@ function PublicMapElement({ element }: { element: CanvasElement }) {
 
 // ─── QR Gift Box Renderer ─────────────────────────────────
 function PublicQrGiftBoxElement({ element }: { element: CanvasElement }) {
+  const [modalOpen, setModalOpen] = useState(false);
   const qr = element.qrGiftBoxProps;
   if (!qr) return null;
-  const [activeTab, setActiveTab] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
-  const activeAcc = qr.accounts?.[activeTab];
 
   const scaleFactor = Math.min(element.width / 120, element.height / 150);
 
@@ -337,11 +341,23 @@ function PublicQrGiftBoxElement({ element }: { element: CanvasElement }) {
 // ─── Album Renderer ───────────────────────────────────────
 function PublicAlbumElement({ element }: { element: CanvasElement }) {
   const ap = element.albumProps;
-  if (!ap || ap.images.length === 0) return null;
   const [current, setCurrent] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  if (ap.sliderStyle && ap.sliderStyle !== 'slideshow') {
+  const delay = ap?.delay ?? 0;
+  const imagesLength = ap?.images?.length ?? 0;
+  const isCustomSlider = Boolean(ap?.sliderStyle && ap?.sliderStyle !== 'slideshow');
+
+  useEffect(() => {
+    if (!isCustomSlider && delay > 0 && imagesLength > 0) {
+      const t = setInterval(() => setCurrent(c => (c + 1) % imagesLength), delay * 1000);
+      return () => clearInterval(t);
+    }
+  }, [isCustomSlider, delay, imagesLength]);
+
+  if (!ap || ap.images.length === 0) return null;
+
+  if (isCustomSlider) {
     const is3d = ap.sliderStyle === '3d';
     const isFlat = ap.sliderStyle === 'flat';
     const isGrid = ap.sliderStyle === 'grid';
@@ -354,7 +370,7 @@ function PublicAlbumElement({ element }: { element: CanvasElement }) {
       opacity: ap.opacity,
       padding: `${ap.padding.top}px ${ap.padding.right}px ${ap.padding.bottom}px ${ap.padding.left}px`,
       borderWidth: `${ap.border.width}px`,
-      borderStyle: ap.border.style as any,
+      borderStyle: ap.border.style as React.CSSProperties['borderStyle'],
       borderColor: ap.border.color,
       borderRadius: `${ap.border.radius}px`,
       boxShadow: ap.shadow.color !== 'transparent' ? `${ap.shadow.x}px ${ap.shadow.y}px ${ap.shadow.blur}px ${ap.shadow.spread}px ${ap.shadow.color}` : 'none',
@@ -372,16 +388,9 @@ function PublicAlbumElement({ element }: { element: CanvasElement }) {
     );
   }
 
-  useEffect(() => {
-    if (ap.delay > 0) {
-      const t = setInterval(() => setCurrent(c => (c + 1) % ap.images.length), ap.delay * 1000);
-      return () => clearInterval(t);
-    }
-  }, [ap.delay, ap.images.length]);
-
   const getEffectStyle = (index: number): React.CSSProperties => {
     const isActive = index === current;
-    let baseStyle: React.CSSProperties = {
+    const baseStyle: React.CSSProperties = {
       position: 'absolute',
       top: 0,
       left: 0,
@@ -439,8 +448,6 @@ function PublicAlbumElement({ element }: { element: CanvasElement }) {
 
 // ─── RSVP & Wishbook Form Renderer ─────────────────────────
 function PublicFormElement({ element, cardId }: { element: CanvasElement; cardId: string }) {
-  const fp = element.formProps;
-  if (!fp) return null;
   const [name, setName] = useState('');
   const [isGroomGuest, setIsGroomGuest] = useState(false);
   const [isBrideGuest, setIsBrideGuest] = useState(false);
@@ -449,6 +456,9 @@ function PublicFormElement({ element, cardId }: { element: CanvasElement; cardId
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const fp = element.formProps;
+  if (!fp) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -481,9 +491,6 @@ function PublicFormElement({ element, cardId }: { element: CanvasElement; cardId
       setSubmitted(true);
     } catch { setSubmitting(false); }
   };
-
-  const alignStyles = { left: 'flex-start', center: 'center', right: 'flex-end' };
-  const alignItems = alignStyles[fp.alignment] || 'center';
 
   if (submitted) {
     return (
@@ -643,8 +650,61 @@ function PublicElement({ element, scrollingDown, cardId, showCover }: { element:
   );
 }
 
+interface PublicCardBlock {
+  id: string;
+  blockType: string;
+  posX?: number;
+  posY?: number;
+  width?: number;
+  height?: number;
+  zIndex?: number;
+  rotation?: number;
+  isLocked?: boolean;
+  content?: Record<string, unknown>;
+  style?: string | AnimationProperties;
+}
+
+interface PublicCardData {
+  id?: string;
+  title?: string;
+  slug?: string;
+  groomName?: string;
+  brideName?: string;
+  thumbnailUrl?: string;
+  canvasWidth?: number;
+  canvasHeight?: number;
+  blocks?: PublicCardBlock[];
+  background?: BackgroundProperties & {
+    canvasHeight?: number;
+    music?: {
+      src?: string;
+      loop?: boolean;
+      volume?: number;
+      autoPlay?: boolean;
+    };
+    coverPage?: Partial<CoverPageProps>;
+  };
+  settings?: {
+    canvasWidth?: number;
+    canvasHeight?: number;
+    description?: string;
+    coverImage?: string;
+    autoScroll?: boolean;
+    autoScrollSpeed?: number;
+    music?: {
+      src?: string;
+      loop?: boolean;
+      volume?: number;
+      autoPlay?: boolean;
+    };
+    coverPage?: Partial<CoverPageProps>;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 // ─── Music floating button ────────────────────────────────
-function MusicButton({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: (e?: any) => void }) {
+function MusicButton({ isPlaying, onToggle }: { isPlaying: boolean; onToggle: (e?: React.MouseEvent) => void }) {
   return (
     <button onClick={onToggle} title={isPlaying ? 'Tắt nhạc' : 'Bật nhạc'}
       style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, #f43f5e, #fb7185)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(244,63,94,0.4)', transition: 'transform 0.2s', color: '#fff' }}>
@@ -684,7 +744,7 @@ function LoadingPage() {
 // ─── MAIN PUBLIC VIEW PAGE ────────────────────────────────
 export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean }) {
   const { slug } = useParams<{ slug: string }>();
-  const [card, setCard] = useState<any>(null);
+  const [card, setCard] = useState<PublicCardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -715,8 +775,8 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
     if (isTemplate) {
       templatesApi.getTemplateById(slug)
         .then(data => {
-          const blocks = data.blocks || [];
-          const calculatedHeight = Math.max(900, ...blocks.map((b: any) => (b.posY || 0) + (b.height || 100))) + 150;
+          const blocks = (data.blocks || []) as PublicCardBlock[];
+          const calculatedHeight = Math.max(900, ...blocks.map((b) => (b.posY || 0) + (b.height || 100))) + 150;
           
           // Map template data to match card structure
           setCard({
@@ -857,7 +917,7 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
     const desc = card.settings?.description || `Thiệp cưới của ${card.groomName || ''} & ${card.brideName || ''}`;
     const cover = card.settings?.coverImage || card.thumbnailUrl || '';
     setMeta('description', desc);
-    setProp('og:title', card.title);
+    setProp('og:title', card.title || '');
     setProp('og:description', desc);
     if (cover) setProp('og:image', cover);
   }, [card]);
@@ -872,7 +932,7 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
     let exactScrollTop = window.scrollY;
     let isHovered = false;
 
-    const autoScrollSpeed = card.settings.autoScrollSpeed || 50;
+    const autoScrollSpeed = card.settings?.autoScrollSpeed || 50;
     const pixelsPerSecond = (autoScrollSpeed / 100) * 120;
 
     const stopScroll = () => { isHovered = true; };
@@ -926,7 +986,7 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
       window.removeEventListener('mousedown', stopScroll);
       window.removeEventListener('mouseup', resumeScroll);
     };
-  }, [card, showCover]);
+  }, [card, showCover, isTemplate]);
   const canvasWidth: number = card?.settings?.canvasWidth || card?.canvasWidth || 500;
 
   useEffect(() => {
@@ -967,25 +1027,36 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
     }
   };
 
-  const elements: CanvasElement[] = (card.blocks || []).map((b: any) => {
+  const elements: CanvasElement[] = (card.blocks || []).map((b: PublicCardBlock) => {
     const elType = blockTypeToElementType(b.blockType);
     let ap = b.style;
     if (typeof ap === 'string') {
-      try { ap = JSON.parse(ap); } catch (e) {}
+      try { ap = JSON.parse(ap); } catch { /* ignore */ }
     }
-    const base = { id: b.id, type: elType, x: b.posX, y: b.posY, width: b.width, height: b.height, zIndex: b.zIndex, rotation: b.rotation || 0, isLocked: b.isLocked, animationProps: ap && Object.keys(ap).length > 0 ? ap : undefined };
+    const base = {
+      id: b.id || Math.random().toString(),
+      type: elType,
+      x: b.posX ?? 0,
+      y: b.posY ?? 0,
+      width: b.width ?? 100,
+      height: b.height ?? 100,
+      zIndex: b.zIndex ?? 0,
+      rotation: b.rotation || 0,
+      isLocked: Boolean(b.isLocked),
+      animationProps: (typeof ap === 'object' && ap !== null && Object.keys(ap).length > 0) ? (ap as AnimationProperties) : undefined,
+    };
     switch (elType) {
-      case 'text': return { ...base, textProps: b.content };
-      case 'image': return { ...base, imageProps: b.content };
-      case 'shape': return { ...base, shapeProps: b.content };
-      case 'countdown': return { ...base, countdownProps: b.content };
-      case 'map': return { ...base, mapProps: b.content };
-      case 'qr_code': return { ...base, qrGiftBoxProps: b.content };
-      case 'calendar': return { ...base, calendarProps: b.content };
-      case 'album': return { ...base, albumProps: b.content };
-      case 'form': return { ...base, formProps: b.content };
-      case 'button_contact': return { ...base, buttonContactProps: b.content };
-      default: return base;
+      case 'text': return { ...base, textProps: b.content as unknown as CanvasElement['textProps'] };
+      case 'image': return { ...base, imageProps: b.content as unknown as CanvasElement['imageProps'] };
+      case 'shape': return { ...base, shapeProps: b.content as unknown as CanvasElement['shapeProps'] };
+      case 'countdown': return { ...base, countdownProps: b.content as unknown as CanvasElement['countdownProps'] };
+      case 'map': return { ...base, mapProps: b.content as unknown as CanvasElement['mapProps'] };
+      case 'qr_code': return { ...base, qrGiftBoxProps: b.content as unknown as CanvasElement['qrGiftBoxProps'] };
+      case 'calendar': return { ...base, calendarProps: b.content as unknown as CanvasElement['calendarProps'] };
+      case 'album': return { ...base, albumProps: b.content as unknown as CanvasElement['albumProps'] };
+      case 'form': return { ...base, formProps: b.content as unknown as CanvasElement['formProps'] };
+      case 'button_contact': return { ...base, buttonContactProps: b.content as unknown as CanvasElement['buttonContactProps'] };
+      default: return base as CanvasElement;
     }
   });
   const canvasHeight: number = card.settings?.canvasHeight || 900;
@@ -1018,7 +1089,7 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
             {[...elements]
               .sort((a, b) => a.zIndex - b.zIndex)
               .map(el => (
-                <PublicElement key={el.id} element={el} scrollingDown={scrollingDown} cardId={card.id} showCover={showCover} />
+                <PublicElement key={el.id} element={el} scrollingDown={scrollingDown} cardId={card.id || ''} showCover={showCover} />
               ))}
           </div>
         </div>
@@ -1039,7 +1110,7 @@ export function PublicViewPage({ isTemplate = false }: { isTemplate?: boolean })
             pointerEvents: showCover ? 'auto' : 'none',
           }}
         >
-          <CoverPagePreview onOpen={() => setShowCover(false)} customProps={(card?.settings as any)?.coverPage} />
+          <CoverPagePreview onOpen={() => setShowCover(false)} customProps={card?.settings?.coverPage as CoverPageProps | undefined} />
         </div>
 
 

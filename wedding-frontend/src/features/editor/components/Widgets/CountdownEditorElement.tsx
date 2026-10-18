@@ -15,11 +15,10 @@ interface TimeLeft {
 
 export function CountdownEditorElement({ element, zoom }: CountdownEditorElementProps) {
     const props = element.countdownProps;
-    if (!props) return null;
-
     const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
     useEffect(() => {
+        if (!props) return;
         const calculateTimeLeft = () => {
             const target = new Date(`${props.targetDate}T${props.targetTime}`);
             const now = new Date();
@@ -41,7 +40,9 @@ export function CountdownEditorElement({ element, zoom }: CountdownEditorElement
         const timer = setInterval(calculateTimeLeft, 1000);
 
         return () => clearInterval(timer);
-    }, [props.targetDate, props.targetTime]);
+    }, [props?.targetDate, props?.targetTime]);
+
+    if (!props) return null;
 
     const scale = zoom / 100;
 

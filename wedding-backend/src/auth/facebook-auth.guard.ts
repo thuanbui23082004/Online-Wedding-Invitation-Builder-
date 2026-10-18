@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
 export class FacebookAuthGuard extends AuthGuard('facebook') {
-  getAuthenticateOptions(context: ExecutionContext) {
+  getAuthenticateOptions(_context: ExecutionContext) {
     return {
       scope: ['email'], // Cấu hình scope chuẩn tại đây
     };

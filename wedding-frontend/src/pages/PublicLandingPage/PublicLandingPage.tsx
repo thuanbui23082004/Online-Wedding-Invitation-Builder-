@@ -18,39 +18,28 @@ import TemplateModal from '../../components/TemplateModal';
 import { Footer } from "../../components/Footer";
 import { templatesApi } from '../../api/templatesApi';
 import {
-  ArrowRight,
   LayoutTemplate,
   UsersRound,
   Sparkles,
-  Share2,
   ChevronDown,
   Send,
   Image,
   Palette,
   Play,
-  Pen,
-  Zap,
-  Clock,
-  CheckCircle2,
-  MapPin,
   Music,
-  HeartHandshake,
   Phone,
   ExternalLink,
   X,
 } from 'lucide-react';
-
 
 import { Button } from '../../components/button';
 import "./style.css";
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { PublicLandingHeader } from '../../components/PublicLandingHeader';
-
 
 interface Testimonial {
   text: string;
@@ -59,7 +48,7 @@ interface Testimonial {
   role: string;
 }
 
-export const testimonialsData: Testimonial[] = [
+const testimonialsData: Testimonial[] = [
   {
     text: "Mẫu thiệp cưới online và Video Slide cưới ở đây làm quá đẹp và tinh tế! Giao diện dễ chỉnh sửa, hình ảnh lên nét 4K khi trình chiếu ở nhà hàng ai cũng khen. Rất tiện lợi!",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150",
@@ -98,7 +87,17 @@ export const testimonialsData: Testimonial[] = [
   },
 ];
 
-export const videoSlideTemplates = [
+interface VideoSlideTemplate {
+  id: string;
+  name: string;
+  code: string;
+  category: string;
+  thumbnail: string;
+  driveUrl: string;
+  embedUrl: string;
+}
+
+const videoSlideTemplates: VideoSlideTemplate[] = [
   {
     id: "slide-1",
     name: "VIDEO 1",
@@ -140,7 +139,14 @@ export const videoSlideTemplates = [
 const firstColumn = testimonialsData.slice(0, 2);
 const secondColumn = testimonialsData.slice(2, 4);
 const thirdColumn = testimonialsData.slice(4, 6);
-const TestimonialsColumn = ({ className, testimonials, duration }: any) => {
+
+interface TestimonialsColumnProps {
+  className?: string;
+  testimonials: Testimonial[];
+  duration?: number;
+}
+
+const TestimonialsColumn = ({ className, testimonials, duration }: TestimonialsColumnProps) => {
   return (
     <div className={className}>
       <motion.ul
@@ -305,15 +311,46 @@ function useCountUp(target: number, duration = 1800) {
   return { count, ref };
 }
 
+interface TemplateItemData {
+  id: string | number;
+  name?: string;
+  title?: string;
+  slug?: string;
+  code?: string;
+  isPremium?: boolean;
+  thumbnailUrl?: string;
+  mainImage?: string;
+  detailImages?: string[];
+  description?: string;
+  demoUrl?: string;
+  previewUrl?: string;
+  link?: string;
+  tag?: string;
+  category?: {
+    name?: string;
+  } | string;
+  [key: string]: unknown;
+}
+
+const galleryImages = [
+  WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5,
+  WeddingImg6, WeddingImg7, WeddingImg8, WeddingImg9, WeddingImg10,
+];
+const doubleImages = [...galleryImages, ...galleryImages];
+
+const words = ["thiệp cưới", "video slide", "tiệc cưới", "lời chúc"];
+
 const PublicLandingPage: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVideoSlide, setSelectedVideoSlide] = useState<any>(null);
+  const [selectedVideoSlide, setSelectedVideoSlide] = useState<VideoSlideTemplate | null>(null);
+  const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobileDevice(window.innerWidth < 640);
+    const checkMobile = () => {
+      setIsMobileDevice(window.innerWidth < 768);
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -329,8 +366,8 @@ const PublicLandingPage: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [selectedVideoSlide]);
-  const [dbTemplates, setDbTemplates] = useState<any[]>([]);
-  const [activeSolutionTab, setActiveSolutionTab] = useState(0);
+
+  const [dbTemplates, setDbTemplates] = useState<TemplateItemData[]>([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('ALL');
 
@@ -344,12 +381,15 @@ const PublicLandingPage: React.FC = () => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const res: any = await templatesApi.getTemplates({ limit: 100 });
+        const res = (await templatesApi.getTemplates({ limit: 100 })) as unknown as {
+          items?: TemplateItemData[];
+          data?: { items?: TemplateItemData[] } | TemplateItemData[];
+        } | TemplateItemData[];
         const items = Array.isArray(res)
           ? res
-          : (res?.items || res?.data?.items || res?.data || []);
+          : (res?.items || (res?.data && 'items' in res.data ? res.data.items : res?.data) || []);
         if (items && Array.isArray(items) && items.length > 0) {
-          setDbTemplates(items);
+          setDbTemplates(items as TemplateItemData[]);
         }
       } catch (err) {
         console.warn('Backend API templates fallback to default templates:', err);
@@ -358,22 +398,22 @@ const PublicLandingPage: React.FC = () => {
     fetchTemplates();
   }, []);
 
-  const handleOpenModal = (item: any) => {
+  const handleOpenModal = (item: TemplateItemData) => {
     const formattedItem: TemplateItem = {
-      id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : item.id,
-      title: item.name || item.title,
+      id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : Number(item.id),
+      title: item.name || item.title || '',
       code: item.slug || item.code || 'DL-2026',
-      tag: item.category?.name || item.tag || 'WEDDING',
+      tag: typeof item.category === 'object' ? item.category?.name || 'WEDDING' : item.tag || 'WEDDING',
       price: item.isPremium ? 'VIP' : 'Miễn phí',
-      mainImage: item.thumbnailUrl || item.mainImage,
-      detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage],
+      mainImage: item.thumbnailUrl || item.mainImage || '',
+      detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage || ''],
       description: item.description || `Mẫu thiết kế thiệp cưới tuyệt đẹp phong cách hiện đại từ DearLove.`
     };
     setSelectedTemplate(formattedItem);
     setIsModalOpen(true);
   };
 
-  const handleOpenDemo = (item: any, e?: React.MouseEvent) => {
+  const handleOpenDemo = (item: TemplateItemData, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const demoUrl = item.demoUrl || item.previewUrl || item.link;
     if (demoUrl && (demoUrl.startsWith('http') || demoUrl.startsWith('/'))) {
@@ -385,7 +425,6 @@ const PublicLandingPage: React.FC = () => {
     }
   };
 
-  const words = ["thiệp cưới", "video slide", "tiệc cưới", "lời chúc"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
@@ -394,41 +433,7 @@ const PublicLandingPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const galleryImages = dbTemplates.length > 0
-    ? dbTemplates.map(t => t.thumbnailUrl).filter(Boolean)
-    : [WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5, WeddingImg6];
-
-  // Dynamic rows for Hero Section marquee scrolling
-  const dbRow1 = dbTemplates.length > 0
-    ? dbTemplates.slice(0, 5).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
-    : [
-      { src: WeddingImg1, alt: "Mẫu thiệp 1" },
-      { src: WeddingImg2, alt: "Mẫu thiệp 2" },
-      { src: WeddingImg3, alt: "Mẫu thiệp 3" },
-      { src: WeddingImg4, alt: "Mẫu thiệp 4" },
-      { src: WeddingImg5, alt: "Mẫu thiệp 5" },
-    ];
-
-  const dbRow2 = dbTemplates.length > 5
-    ? dbTemplates.slice(5, 10).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
-    : [
-      { src: WeddingImg6, alt: "Mẫu thiệp 6" },
-      { src: WeddingImg7, alt: "Mẫu thiệp 7" },
-      { src: WeddingImg8, alt: "Mẫu thiệp 8" },
-      { src: WeddingImg9, alt: "Mẫu thiệp 9" },
-      { src: WeddingImg10, alt: "Mẫu thiệp 10" },
-    ];
-
-  const templatesRow1 = dbRow1;
-  const templatesRow2 = dbRow2;
-  const templatesRow3 = dbRow1;
-  const templatesRow4 = dbRow2;
-
-  // Nhân đôi mảng để tạo luồng chạy lặp vô tận không có điểm đứt
-  const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
-  const doubleImages = [...galleryImages, ...galleryImages];
-
-  const templatesToRender = dbTemplates.length > 0 ? dbTemplates : templatesData;
+  const templatesToRender: TemplateItemData[] = dbTemplates.length > 0 ? dbTemplates : (templatesData as unknown as TemplateItemData[]);
 
   // Mouse tracking for hero section
   const heroRef = React.useRef<HTMLDivElement>(null);
@@ -774,29 +779,46 @@ const PublicLandingPage: React.FC = () => {
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-zinc-900 tracking-tight leading-tight">
                 Chọn Mẫu & Trải Nghiệm <span className="inline-block text-[#700B1A] font-handwritten italic font-bold px-1">Thiệp Cưới Online</span>
               </h2>
-
             </div>
 
-
+            <div className="flex flex-wrap gap-2 justify-center md:justify-end">
+              {[
+                { id: 'ALL', label: 'Tất cả' },
+                { id: 'WEDDING', label: 'Thiệp cưới' },
+                { id: 'EVENT', label: 'Sự kiện' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryFilter(cat.id)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    selectedCategoryFilter === cat.id
+                      ? 'bg-[#700B1A] text-white shadow-sm'
+                      : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </motion.div>
-
-
 
           {/* Responsive Mobile-Friendly Template Grid (2 columns on mobile, 4 columns on desktop) */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-6 mb-8 md:mb-12">
             {templatesToRender
-              .filter((item: any) => {
+              .filter((item: TemplateItemData) => {
                 if (selectedCategoryFilter === 'ALL') return true;
-                const cat = (item.category?.name || item.tag || item.category || '').toUpperCase();
+                const catName = typeof item.category === 'object' ? item.category?.name : (item.tag || item.category || '');
+                const cat = String(catName || '').toUpperCase();
                 if (selectedCategoryFilter === 'WEDDING') return cat.includes('WEDDING') || cat.includes('CƯỚI');
                 if (selectedCategoryFilter === 'VIDEO') return cat.includes('VIDEO') || cat.includes('SLIDE');
                 if (selectedCategoryFilter === 'EVENT') return cat.includes('EVENT') || cat.includes('TIỆC') || cat.includes('REUNION');
                 return true;
               })
-              .map((item: any) => {
+              .map((item: TemplateItemData) => {
                 const imageSrc = item.thumbnailUrl || item.mainImage;
                 const titleText = item.name || item.title;
-                const categoryTag = item.category?.name || item.tag || 'WEDDING';
+                const categoryTag = (typeof item.category === 'object' && item.category !== null && 'name' in item.category ? item.category.name : typeof item.category === 'string' ? item.category : item.tag) || 'WEDDING';
                 const codeText = item.slug || item.code || 'DL-2026';
                 const isVIP = item.isPremium;
 

@@ -18,26 +18,22 @@ import TemplateModal from '../../components/TemplateModal';
 import { Footer } from "../../components/Footer";
 import { templatesApi } from '../../api/templatesApi';
 import {
-  ArrowRight,
   LayoutTemplate,
-
   UsersRound,
   Sparkles,
   Share2,
   ChevronDown,
   Send,
-  Image,
   Palette,
   Play,
+  ArrowRight,
   Pen,
-
+  Image as ImageIcon,
 } from 'lucide-react';
-
 
 import { Button } from '../../components/button';
 import "./style.css";
 import { useState, useEffect, useRef } from 'react';
-
 
 import { motion } from 'framer-motion';
 
@@ -51,7 +47,7 @@ interface Testimonial {
   role: string;
 }
 
-export const testimonialsData: Testimonial[] = [
+const testimonialsData: Testimonial[] = [
   {
     text: "Tụi mình tự tạo thiệp cưới trên DearLove chỉ mất chưa đầy 15 phút. Giao diện kéo thả trực quan, hình ảnh lên nét căng và điều thích nhất là tính năng quản lý khách mời tham dự cực kỳ chính xác, đỡ hẳn khâu gọi điện xác nhận.",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150",
@@ -93,7 +89,14 @@ export const testimonialsData: Testimonial[] = [
 const firstColumn = testimonialsData.slice(0, 2);
 const secondColumn = testimonialsData.slice(2, 4);
 const thirdColumn = testimonialsData.slice(4, 6);
-const TestimonialsColumn = ({ className, testimonials, duration }: any) => {
+
+interface TestimonialsColumnProps {
+  className?: string;
+  testimonials: Testimonial[];
+  duration?: number;
+}
+
+const TestimonialsColumn = ({ className, testimonials, duration }: TestimonialsColumnProps) => {
   return (
     <div className={className}>
       <motion.ul
@@ -309,18 +312,54 @@ function useCountUp(target: number, duration = 1800) {
   return { count, ref };
 }
 
+interface TemplateItemData {
+  id: string | number;
+  name?: string;
+  title?: string;
+  slug?: string;
+  code?: string;
+  isPremium?: boolean;
+  thumbnailUrl?: string;
+  mainImage?: string;
+  detailImages?: string[];
+  description?: string;
+  tag?: string;
+  category?: {
+    name?: string;
+  } | string;
+  [key: string]: unknown;
+}
+
+const templatesRow1 = [WeddingImg1, WeddingImg2, WeddingImg3].map((src, i) => ({ src, alt: `Template ${i + 1}` }));
+const templatesRow2 = [WeddingImg4, WeddingImg5, WeddingImg6].map((src, i) => ({ src, alt: `Template ${i + 4}` }));
+const templatesRow3 = [WeddingImg7, WeddingImg8, WeddingImg9].map((src, i) => ({ src, alt: `Template ${i + 7}` }));
+const templatesRow4 = [WeddingImg10, WeddingImg1, WeddingImg2].map((src, i) => ({ src, alt: `Template ${i + 10}` }));
+
+const galleryImages = [
+  WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5,
+  WeddingImg6, WeddingImg7, WeddingImg8, WeddingImg9, WeddingImg10,
+];
+const doubleImages = [...galleryImages, ...galleryImages];
+
+const words = ["tân gia", "thôi nôi", "đám cưới", "lời chúc"];
+
 const LandingPage: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [dbTemplates, setDbTemplates] = useState<any[]>([]);
+  const [dbTemplates, setDbTemplates] = useState<TemplateItemData[]>([]);
+  const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const res = await templatesApi.getTemplates({ limit: 12 });
-        const items = Array.isArray(res) ? res : (res?.items || []);
-        setDbTemplates(items);
+        const res = (await templatesApi.getTemplates({ limit: 12 })) as unknown as {
+          items?: TemplateItemData[];
+          data?: { items?: TemplateItemData[] } | TemplateItemData[];
+        } | TemplateItemData[];
+        const items = Array.isArray(res)
+          ? res
+          : (res?.items || (res?.data && 'items' in res.data ? res.data.items : res?.data) || []);
+        setDbTemplates(items as TemplateItemData[]);
       } catch (err) {
         console.error('Error fetching templates for landing:', err);
       }
@@ -328,22 +367,21 @@ const LandingPage: React.FC = () => {
     fetchTemplates();
   }, []);
 
-  const handleOpenModal = (item: any) => {
+  const handleOpenModal = (item: TemplateItemData) => {
     const formattedItem: TemplateItem = {
-      id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : item.id,
-      title: item.name || item.title,
+      id: typeof item.id === 'string' ? parseInt(item.id.replace(/\D/g, '')) || 99 : Number(item.id),
+      title: item.name || item.title || '',
       code: item.slug || item.code || 'DL-2026',
-      tag: item.category?.name || item.tag || 'WEDDING',
+      tag: typeof item.category === 'object' ? item.category?.name || 'WEDDING' : item.tag || 'WEDDING',
       price: item.isPremium ? 'VIP' : 'Miễn phí',
-      mainImage: item.thumbnailUrl || item.mainImage,
-      detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage],
+      mainImage: item.thumbnailUrl || item.mainImage || '',
+      detailImages: item.detailImages || [item.thumbnailUrl || item.mainImage || ''],
       description: item.description || `Mẫu thiết kế thiệp cưới tuyệt đẹp phong cách hiện đại từ DearLove.`
     };
     setSelectedTemplate(formattedItem);
     setIsModalOpen(true);
   };
 
-  const words = ["tân gia", "thôi nôi", "đám cưới", "lời chúc"];
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
@@ -352,41 +390,7 @@ const LandingPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const galleryImages = dbTemplates.length > 0
-    ? dbTemplates.map(t => t.thumbnailUrl).filter(Boolean)
-    : [WeddingImg1, WeddingImg2, WeddingImg3, WeddingImg4, WeddingImg5, WeddingImg6];
-
-  // Dynamic rows for Hero Section marquee scrolling
-  const dbRow1 = dbTemplates.length > 0
-    ? dbTemplates.slice(0, 5).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
-    : [
-      { src: WeddingImg1, alt: "Mẫu thiệp 1" },
-      { src: WeddingImg2, alt: "Mẫu thiệp 2" },
-      { src: WeddingImg3, alt: "Mẫu thiệp 3" },
-      { src: WeddingImg4, alt: "Mẫu thiệp 4" },
-      { src: WeddingImg5, alt: "Mẫu thiệp 5" },
-    ];
-
-  const dbRow2 = dbTemplates.length > 5
-    ? dbTemplates.slice(5, 10).map(t => ({ src: t.thumbnailUrl, alt: t.name }))
-    : [
-      { src: WeddingImg6, alt: "Mẫu thiệp 6" },
-      { src: WeddingImg7, alt: "Mẫu thiệp 7" },
-      { src: WeddingImg8, alt: "Mẫu thiệp 8" },
-      { src: WeddingImg9, alt: "Mẫu thiệp 9" },
-      { src: WeddingImg10, alt: "Mẫu thiệp 10" },
-    ];
-
-  const templatesRow1 = dbRow1;
-  const templatesRow2 = dbRow2;
-  const templatesRow3 = dbRow1;
-  const templatesRow4 = dbRow2;
-
-  // Nhân đôi mảng để tạo luồng chạy lặp vô tận không có điểm đứt
-  const [activeClickIdx, setActiveClickIdx] = useState<number | null>(null);
-  const doubleImages = [...galleryImages, ...galleryImages];
-
-  const templatesToRender = dbTemplates.length > 0 ? dbTemplates : templatesData;
+  const templatesToRender: TemplateItemData[] = dbTemplates.length > 0 ? dbTemplates : (templatesData as unknown as TemplateItemData[]);
 
   // Mouse tracking for hero section
   const heroRef = React.useRef<HTMLDivElement>(null);
@@ -781,7 +785,7 @@ const LandingPage: React.FC = () => {
               {templatesToRender.map((item) => {
                 const imageSrc = item.thumbnailUrl || item.mainImage;
                 const titleText = item.name || item.title;
-                const categoryTag = item.category?.name || item.tag || 'WEDDING';
+                const categoryTag = (typeof item.category === 'object' && item.category !== null && 'name' in item.category ? item.category.name : typeof item.category === 'string' ? item.category : item.tag) || 'WEDDING';
                 const codeText = item.slug || item.code || 'DL-2026';
                 return (
                   <div
@@ -880,7 +884,7 @@ const LandingPage: React.FC = () => {
                   step: "Bước 1",
                   title: "Chọn mẫu",
                   desc: "Kho mẫu đa dạng, cập nhật liên tục với nhiều chủ đề và phong cách khác nhau.",
-                  icon: <Image size={25} className="text-white" />,
+                  icon: <ImageIcon size={25} className="text-white" />,
                 },
                 {
                   step: "Bước 2",

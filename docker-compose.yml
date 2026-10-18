@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: wedding
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      POSTGRES_DB: wedding
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U wedding -d wedding']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Chạy MỘT LẦN để áp dụng migration rồi thoát
+  migrate:
+    build:
+      context: ./wedding-backend
+      target: build # stage build có Prisma CLI
+    command: npx prisma migrate deploy # nếu chưa có thư mục migrations: npx prisma db push
+    environment:
+      DATABASE_URL: postgresql://wedding:${DB_PASSWORD}@db:5432/wedding
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  backend:
+    build:
+      context: ./wedding-backend
+    env_file: ./wedding-backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: '8000'
+      DATABASE_URL: postgresql://wedding:${DB_PASSWORD}@db:5432/wedding
+      FRONTEND_URL: http://localhost:8080
+    ports:
+      - '8000:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./wedding-frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - '8080:8080'
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:

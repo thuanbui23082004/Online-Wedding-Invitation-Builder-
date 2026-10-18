@@ -1,9 +1,33 @@
 // src/rsvps/rsvps.service.ts
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { GuestSide, RsvpStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+export interface RsvpEntryDto {
+  guestName?: string;
+  phone?: string;
+  side?: string;
+  attending?: string;
+  numAttendees?: number;
+  note?: string;
+}
+
+export interface SubmitRsvpDto extends RsvpEntryDto {
+  entries?: RsvpEntryDto[];
+}
+
+function parseSide(side?: string): GuestSide | null {
+  if (side === 'groom') return GuestSide.groom;
+  if (side === 'bride') return GuestSide.bride;
+  if (side === 'both') return GuestSide.both;
+  return null;
+}
+
+function parseAttending(attending?: string): RsvpStatus {
+  if (attending === 'no') return RsvpStatus.no;
+  if (attending === 'maybe') return RsvpStatus.maybe;
+  return RsvpStatus.yes;
+}
 
 @Injectable()
 export class RsvpsService {
@@ -18,21 +42,21 @@ export class RsvpsService {
    * Hỗ trợ submit cả Nhà trai và Nhà gái trong cùng 1 request bằng cách
    * truyền mảng `entries` hoặc các trường riêng lẻ.
    */
-  async submitRsvp(cardId: string, data: any) {
+  async submitRsvp(cardId: string, data: SubmitRsvpDto) {
     const card = await this.prisma.card.findUnique({ where: { id: cardId } });
     if (!card) throw new NotFoundException('Không tìm thấy thiệp cưới');
 
     // Hỗ trợ submit nhiều RSVP một lúc (Nhà trai + Nhà gái)
     if (Array.isArray(data.entries)) {
       const records = await Promise.all(
-        data.entries.map((entry: any) =>
+        data.entries.map((entry: RsvpEntryDto) =>
           this.prisma.rsvpResponse.create({
             data: {
               cardId,
-              guestName: entry.guestName ?? data.guestName,
+              guestName: (entry.guestName ?? data.guestName) || 'Khách mời',
               phone: entry.phone ?? data.phone,
-              side: entry.side,
-              attending: entry.attending,
+              side: parseSide(entry.side),
+              attending: parseAttending(entry.attending),
               numAttendees: entry.numAttendees || 1,
               note: entry.note,
             },
@@ -46,10 +70,10 @@ export class RsvpsService {
     return this.prisma.rsvpResponse.create({
       data: {
         cardId,
-        guestName: data.guestName,
+        guestName: data.guestName || 'Khách mời',
         phone: data.phone,
-        side: data.side,
-        attending: data.attending,
+        side: parseSide(data.side),
+        attending: parseAttending(data.attending),
         numAttendees: data.numAttendees || 1,
         note: data.note,
       },

@@ -19,7 +19,7 @@ export class RemoveBgService {
     private readonly config: ConfigService,
     private readonly preprocessor: PreprocessorService,
   ) {
-    this.apiKey = this.config.getOrThrow<string>('CLIPDROP_API_KEY');
+    this.apiKey = this.config.get<string>('CLIPDROP_API_KEY') || '';
   }
 
   /**

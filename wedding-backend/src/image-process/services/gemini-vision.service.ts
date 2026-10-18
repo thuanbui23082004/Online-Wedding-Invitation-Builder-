@@ -23,9 +23,8 @@ export class GeminiVisionService {
   private readonly genAI: GoogleGenerativeAI;
 
   constructor(private readonly config: ConfigService) {
-    this.genAI = new GoogleGenerativeAI(
-      this.config.getOrThrow<string>('GEMINI_API_KEY'),
-    );
+    const apiKey = this.config.get<string>('GEMINI_API_KEY') || 'dummy-key';
+    this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
   /**

@@ -1,12 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateTemplateDto } from './dto/create-template.dto';
-import { UpdateTemplateDto } from './dto/update-template.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryTemplatesDto } from './dto/query-template.dto';
 import {
   CreateAdminTemplateDto,
   UpdateAdminTemplateDto,
-  TemplateStatus,
 } from './dto/admin-template.dto';
 import { AssetsService } from '../assets/assets.service';
 
@@ -15,7 +12,7 @@ export class TemplatesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly assetsService: AssetsService,
-  ) { }
+  ) {}
 
   // GET /api/templates/categories
   async getPublicCategories() {
@@ -257,14 +254,14 @@ export class TemplatesService {
       // Chạy song song: xoá blocks cũ + cập nhật background
       await Promise.all([
         tx.templateBlock.deleteMany({ where: { templateId: id } }),
-        (dto.background || dto.canvasWidth)
+        dto.background || dto.canvasWidth
           ? tx.template.update({
-            where: { id },
-            data: {
-              ...(dto.background && { background: dto.background }),
-              ...(dto.canvasWidth && { canvasWidth: dto.canvasWidth }),
-            },
-          })
+              where: { id },
+              data: {
+                ...(dto.background && { background: dto.background }),
+                ...(dto.canvasWidth && { canvasWidth: dto.canvasWidth }),
+              },
+            })
           : Promise.resolve(),
       ]);
 

@@ -11,7 +11,7 @@ import { QueryTemplatesDto } from './dto/query-template.dto';
 
 @Controller('templates')
 export class TemplatesController {
-  constructor(private readonly service: TemplatesService) { }
+  constructor(private readonly service: TemplatesService) {}
 
   @Get('categories')
   getCategories() {

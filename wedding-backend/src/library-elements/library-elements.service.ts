@@ -28,7 +28,7 @@ export class LibraryElementsService {
   constructor(
     @Inject('CLOUDINARY') private cloudinary: typeof Cloudinary,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   // ─── Cloudinary helper ────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ export class LibraryElementsService {
     return cat;
   }
 
-  async createCategory(dto: CreateElementCategoryDto, userId: string) {
+  async createCategory(dto: CreateElementCategoryDto, _userId?: string) {
     const existing = await this.prisma.elementCategory.findUnique({
       where: { slug: dto.slug },
     });
@@ -217,7 +217,7 @@ export class LibraryElementsService {
   async uploadElementFile(
     id: string,
     file: Express.Multer.File,
-    userId: string,
+    _userId?: string,
   ) {
     const el = await this.getElementById(id);
 
@@ -228,7 +228,9 @@ export class LibraryElementsService {
         await this.cloudinary.uploader.destroy(publicId, {
           resource_type: 'image',
         });
-      } catch (_) { }
+      } catch {
+        // ignore error if old file not found on Cloudinary
+      }
     }
 
     let result: UploadApiResponse;
@@ -288,7 +290,9 @@ export class LibraryElementsService {
         await this.cloudinary.uploader.destroy(publicId, {
           resource_type: 'image',
         });
-      } catch (_) { }
+      } catch {
+        // ignore error if file not found on Cloudinary
+      }
     }
 
     await this.prisma.libraryElement.delete({ where: { id } });

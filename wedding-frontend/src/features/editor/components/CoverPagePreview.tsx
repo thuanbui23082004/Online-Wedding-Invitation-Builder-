@@ -203,7 +203,7 @@ export function CoverPagePreview({ onOpen, customProps }: { onOpen?: () => void,
             marginBottom: '20px',
             zIndex: 30,
             animation: 'seal-pulse 2s ease-in-out infinite',
-            // @ts-ignore
+            // @ts-expect-error custom css variable
             '--shadow-color': 'rgba(240, 212, 151, 0.5)',
           }}
         >
