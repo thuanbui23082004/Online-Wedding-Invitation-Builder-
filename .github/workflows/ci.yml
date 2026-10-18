@@ -119,6 +119,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: wedding-backend/package-lock.json
+      - run: cp .env.example .env
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma migrate deploy # nếu chưa có migrations: npx prisma db push

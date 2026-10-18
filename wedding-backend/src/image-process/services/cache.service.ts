@@ -21,17 +21,25 @@ export class CacheService {
   private readonly redis: Redis;
 
   constructor(private readonly config: ConfigService) {
+    const redisUrl =
+      this.config.get<string>('UPSTASH_REDIS_URL') ||
+      'https://placeholder.upstash.io';
+    const redisToken =
+      this.config.get<string>('UPSTASH_REDIS_TOKEN') || 'placeholder-token';
+
     // Upstash Redis — HTTP-based, no persistent TCP connection needed
     this.redis = new Redis({
-      url: this.config.getOrThrow<string>('UPSTASH_REDIS_URL'),
-      token: this.config.getOrThrow<string>('UPSTASH_REDIS_TOKEN'),
+      url: redisUrl,
+      token: redisToken,
     });
 
     // Configure Cloudinary using existing env vars shared with assets module
     cloudinary.config({
-      cloud_name: this.config.getOrThrow<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.config.getOrThrow<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.config.getOrThrow<string>('CLOUDINARY_API_SECRET'),
+      cloud_name:
+        this.config.get<string>('CLOUDINARY_CLOUD_NAME') || 'placeholder',
+      api_key: this.config.get<string>('CLOUDINARY_API_KEY') || 'placeholder',
+      api_secret:
+        this.config.get<string>('CLOUDINARY_API_SECRET') || 'placeholder',
       secure: true,
     });
   }
